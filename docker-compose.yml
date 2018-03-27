@@ -1,0 +1,11 @@
+version: '3'
+services:
+  pg:
+    container_name: "pg9.5"
+    env_file:
+      - "compose.env"
+    ports:
+      - "5555:5432"
+    volumes:
+      - "$HOME/pg_data:/volume"
+    image: "postgres:9.5"
