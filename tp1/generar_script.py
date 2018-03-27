@@ -1,5 +1,7 @@
 import csv
 import random
+MIN_CAPACIDAD = 50
+MAX_CAPACIDAD = 2000
 
 def main():
     with open("./modelos_aviones.csv") as f:
@@ -9,7 +11,7 @@ def main():
                 modelo = {
                     "tipoModelo": int(row[1]),
                     "descripcion": "\'{}\'".format(row[0]['model']),
-                    "capacidad": random.randint(50, 900),
+                    "capacidad": random.randint(MIN_CAPACIDAD, MAX_CAPACIDAD),
                 }
                 script.write("INSERT INTO \"modeloAvion\" VALUES({}, {}, {});\n".format(
                     modelo["tipoModelo"], modelo["descripcion"], modelo["capacidad"]))
