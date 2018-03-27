@@ -9,3 +9,4 @@ services:
     volumes:
       - "$HOME/pg_data:/volume"
     image: "postgres:9.5"
+    restart: "always"
