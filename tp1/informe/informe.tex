@@ -36,7 +36,7 @@
 
 \subsection{Modelos de avión}
 
-Los modelos de avión utilizados para la carga masiva de la base de datos fueron tomados del \emph{dataset} disponible en \cite{dataset}. Los tipos de naves del \emph{dataset} fueron extraídos mediante el \emph{script} de Python \textbf{extraer\_modelos.py}
+Los modelos de avión utilizados para la carga masiva de la base de datos fueron tomados del \emph{dataset} disponible en \cite{dataset:2013}. Los tipos de naves del \emph{dataset} fueron extraídos mediante el \emph{script} de Python \textbf{extraer\_modelos.py}
 
 A continuación, mediante otro \emph{script} en Python (\textbf{generar\_script.py}), generamos un \emph{script} en SQL para hacer la carga de los modelos de avión a la base de datos (\textbf{script\_carga\_modelos.sql}). De esta forma, insertamos en la base el total de \textbf{2449} modelos de avión, siendo su clave primaria un número secuencial y su capacidad un valor aleatorio entre 50 y 2000. 
 
@@ -50,7 +50,7 @@ aviones=# SELECT COUNT(*) FROM "modeloAvion";
 (1 row)
 \end{lstlisting}
 
-Los valores cargados para los modelos de avión cumplen con la estadística V(capacidad, modeloAvion) \geq 1000
+Los valores cargados para los modelos de avión cumplen con la estadística V(capacidad, modeloAvion) $\geq$ 1000
 
 \vspace*{5mm}
 \lstset{style=sql}
@@ -64,7 +64,7 @@ aviones=# SELECT COUNT(DISTINCT capacidad) FROM "modeloAvion";
 
 \subsection{Trabajadores}
 
-Para la carga de los trabajadores, se utilizó el sitio \url{http://www.generatedata.com/} utilizando valores aleatorios para los DNIs y nombres de ascendencia latina disponibles en el repositorio de \emph{GitHub} \cite{apellidos}. El script generado por el sitio se encuentra bajo el nombre de \textbf{script\_carga\_trabajadores.sql} 
+Para la carga de los trabajadores, se utilizó el sitio \cite{generatedata} utilizando valores aleatorios para los DNIs y nombres de ascendencia latina disponibles en el repositorio de \emph{GitHub} \cite{apellidos:2012}. El script generado por el sitio se encuentra bajo el nombre de \textbf{script\_carga\_trabajadores.sql} 
 
 \vspace*{5mm}
 \lstset{style=sql}
