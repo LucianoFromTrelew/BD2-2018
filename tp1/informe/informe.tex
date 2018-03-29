@@ -1,0 +1,135 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% En 'inclues.tex' se encuentran la importación de paquetes necesarios
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\input{includes}
+\input{settings}
+
+
+\begin{document}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% En 'titlepage.tex' se encuentra la página de título
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\input{titlepage}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% INDICE
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\clearpage
+\tableofcontents
+\clearpage
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% ABSTRACT
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%\begin{abstract}
+%Your abstract.
+%\end{abstract}
+
+\section{Carga masiva de la Base de Datos}
+
+\emph{Agregar tuplas en forma masiva a las tablas modeloAvion y Avion de forma tal que por cada modeloAvion insertado se agreguen 10000 aviones y que la estadística V(capacidad, modeloAvion) >= 1000. Además por cada avión agregado agregar una reparación del mismo (con algún DNI de trabajador ya preexistente). Se debe presentar el script de la solucion.} 
+
+~
+
+\emph{\textbf{Los scripts a los que se haga referencia se pueden encontrar en el directorio scripts/}} 
+
+\subsection{Modelos de avión}
+
+Los modelos de avión utilizados para la carga masiva de la base de datos fueron tomados del \emph{dataset} disponible en \cite{dataset}. Los tipos de naves del \emph{dataset} fueron extraídos mediante el \emph{script} de Python \textbf{extraer\_modelos.py}
+
+A continuación, mediante otro \emph{script} en Python (\textbf{generar\_script.py}), generamos un \emph{script} en SQL para hacer la carga de los modelos de avión a la base de datos (\textbf{script\_carga\_modelos.sql}). De esta forma, insertamos en la base el total de \textbf{2449} modelos de avión, siendo su clave primaria un número secuencial y su capacidad un valor aleatorio entre 50 y 2000. 
+
+\vspace*{5mm}
+\lstset{style=sql}
+\begin{lstlisting}
+aviones=# SELECT COUNT(*) FROM "modeloAvion";
+ count 
+-------
+  2449
+(1 row)
+\end{lstlisting}
+
+Los valores cargados para los modelos de avión cumplen con la estadística V(capacidad, modeloAvion) \geq 1000
+
+\vspace*{5mm}
+\lstset{style=sql}
+\begin{lstlisting}
+aviones=# SELECT COUNT(DISTINCT capacidad) FROM "modeloAvion";
+ count 
+-------
+  1389
+(1 row)
+\end{lstlisting}
+
+\subsection{Trabajadores}
+
+Para la carga de los trabajadores, se utilizó el sitio \url{http://www.generatedata.com/} utilizando valores aleatorios para los DNIs y nombres de ascendencia latina disponibles en el repositorio de \emph{GitHub} \cite{apellidos}. El script generado por el sitio se encuentra bajo el nombre de \textbf{script\_carga\_trabajadores.sql} 
+
+\vspace*{5mm}
+\lstset{style=sql}
+\begin{lstlisting}
+aviones=# SELECT COUNT(*) FROM trabajador;
+ count 
+-------
+   105
+(1 row)
+\end{lstlisting}
+
+
+\subsection{Aviones}
+Una vez ejecutados exitósamente los dos scripts de carga, se procede a insertar masivamente registros en la tabla de aviones. 
+
+Por cada modelo de avión existente en la base de datos, se cargan 10000 aviones, con una cantidad de horas de vuelo aleatoria entre 100 y 5000, y un año aleatorio entre 1970 y 2018. El \emph{script} de carga correspondiente es \textbf{script\_carga\_aviones.sql}.
+
+La función que realiza la carga de aviones está compuesto por dos bucles \emph{FOR .. LOOP} anidados; el más externo itera sobre los modelos de avión, mientras que el interno sobre enteros entre 1 y 10000. 
+
+\vspace*{5mm}
+\lstset{style=sql}
+\begin{lstlisting}
+aviones=# SELECT COUNT(*) FROM avion;
+  count   
+----------
+ 24490006
+(1 row)
+\end{lstlisting}
+
+\subsection{Reparaciones}
+Por último, se cargan las reparaciones de los aviones. El \emph{script} correspondiente (\textbf{script\_carga\_reparaciones.sql}) consiste también de dos bucles \emph{FOR..LOOP} anidados; el primero itera sobre todos los aviones existentes, mientras que el segundo itera sobre un rango de valores aleatorios entre 1 y 10, que corresponden a la cantidad de reparaciones registradas para ese avión (puede haber registrado entre 1 a 10 reparaciones). El DNI del trabajador también va a ser un valor aleatorio entre todos los registrados
+\vspace*{5mm}
+\lstset{style=sql}
+\begin{lstlisting}
+SELECT INTO dni_trabajador dni FROM trabajador ORDER BY random() LIMIT 1;
+\end{lstlisting}
+
+La fecha de inicio de la reparación se obtiene aleatoriamente entre un intervalo de tiempo, empezando desde 01/01/2010, hasta el 01/03/2018. Por último, la fecha de fin de reparación, que por más que no es obligatoria, se obtiene a partir de sumar una cantidad de días aleatoria a la fecha de inicio (entre 2 y 30 días).
+
+Debido a los valores aleatorios, puede ocurrir que se intenten insertar dos veces una misma tupla (una reparación que tenga la misma clave primaria, compuesta del DNI del trabajador, el ID del avión, y la fecha de inicio de la reparación), por lo tanto se decidió que, frente a un intento de insertar un registro repetido, no hacer nada (no insertar la tupla conflictuante ni actualizar la existente).
+
+\vspace*{5mm}
+\lstset{style=sql}
+\begin{lstlisting}
+INSERT INTO "trabajadorReparacion" VALUES(dni_trabajador, nro_avion, fecha_inicio, fecha_fin, tipo_falla) ON CONFLICT DO NOTHING;
+\end{lstlisting}
+
+\lstset{style=sql}
+\begin{lstlisting}
+aviones=# SELECT COUNT(*) FROM "trabajadorReparacion";
+   count   
+-----------
+ 134712980
+(1 row)
+\end{lstlisting}
+
+
+
+
+
+
+
+\clearpage
+\bibliographystyle{bst/unified}
+\bibliography{references}
+
+\end{document}
+\todo[inline, color=green!40]{This is an inline comment.}
