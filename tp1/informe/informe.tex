@@ -30,8 +30,6 @@
 
 \emph{Agregar tuplas en forma masiva a las tablas modeloAvion y Avion de forma tal que por cada modeloAvion insertado se agreguen 10000 aviones y que la estadística V(capacidad, modeloAvion) >= 1000. Además por cada avión agregado agregar una reparación del mismo (con algún DNI de trabajador ya preexistente). Se debe presentar el script de la solucion.} 
 
-~
-
 \emph{\textbf{Los scripts a los que se haga referencia se pueden encontrar en el directorio scripts/}} 
 
 \subsection{Modelos de avión}
@@ -121,12 +119,107 @@ aviones=# SELECT COUNT(*) FROM "trabajadorReparacion";
 (1 row)
 \end{lstlisting}
 
+\section{Consultas a la Base de Datos}
+\emph{Hacer una selección de las reparaciones para aviones cuya capacidad es = X (tomar para X un valor válido de los que se encuentren en su base de datos)}
+
+~\\
+
+Debido a que los valores de capacidad de los modelos de avión fueron ingresados aleatoriamente, pueden existir varios repetidos.
+
+\vspace*{5mm}
+\lstset{style=sql}
+\begin{lstlisting}
+aviones=# SELECT COUNT(*) FROM (SELECT capacidad, COUNT(*) FROM "modeloAvion" GROUP BY capacidad HAVING COUNT(*) > 1 ORDER BY COUNT(*) DESC) sub_query;
+ count 
+-------
+   708
+(1 row)
+\end{lstlisting}
+
+Como se puede ver en la consulta anterior, existen \textbf{708} valores de capacidad repetidos; se elige como valor de capacidad \emph{X} al que esté repetido la mayor cantidad de veces.  
+
+\vspace*{5mm}
+\lstset{style=sql}
+\begin{lstlisting}
+aviones=# SELECT capacidad, COUNT(*) FROM "modeloAvion" GROUP BY capacidad HAVING COUNT(*) > 1 ORDER BY COUNT(*) DESC LIMIT 1;
+ capacidad | count 
+-----------+-------
+      1959 |     7
+(1 row)
+\end{lstlisting}
+
+El valor \emph{X} para hacer la consulta sobre las reparaciones de aviones será \textbf{1959}  
+
+
+Ahora bien, como se pedía en la consulta, se deben recuperar las \emph{reparaciones para aviones cuya capacidad es = X} (1959) 
+
+%\vspace*{5mm}
+\lstset{style=sql}
+\begin{lstlisting}
+SELECT  tr."dniTrabajador", 
+        tr."nroAvion",
+        tr."fechaInicioReparacion",
+        tr."fechaFinReparacion",
+        md.descripcion,
+        f.descripcion
+        FROM 
+            "trabajadorReparacion" AS tr,
+            "modeloAvion" AS md,
+            avion AS av,
+            falla AS f
+        WHERE
+            tr."nroAvion" = av."nroAvion"
+            AND av."tipoModelo" = md."tipoModelo"
+            AND md.capacidad = 1959;
+\end{lstlisting}
+
+\lstset{style=sql}
+\begin{lstlisting}
+aviones=# SELECT COUNT(*) FROM (
+     SELECT  tr."dniTrabajador", 
+             tr."nroAvion",
+             tr."fechaInicioReparacion",
+             tr."fechaFinReparacion",
+             md.descripcion,
+             f.descripcion
+             FROM 
+                 "trabajadorReparacion" AS tr,
+                 "modeloAvion" AS md,
+                 avion AS av,
+                 falla AS f
+             WHERE
+                 tr."nroAvion" = av."nroAvion"
+                 AND av."tipoModelo" = md."tipoModelo"
+                 AND md.capacidad = 1959) sub_query;
+  count  
+---------
+ 1537508
+(1 row)
+\end{lstlisting}
+
+De \textbf{134712980} reparaciones registradas, \textbf{1537508} corresponden a aviones cuya capacidad es mayor a \textbf{1959}. La consulta fue resuelta en aproximádamente \textbf{28} segundos.   
+
+\section{Analizando la consulta}
+\emph{Analizar el plan de ejecución de la consulta del punto anterior. Documentar en su informe} 
+
+~\\
+
+Utilizando la función de \emph{EXPLAIN ANALYZE} que nos provee el motor para analizar la consulta, arroja los siguientes resultados 
+
+\vspace*{5mm}
+\lstset{style=sql}
+\begin{lstlisting}
+\end{lstlisting}
+ 
 
 
 
 
 
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% FIN DOCUMENTO, AHORA REFERENCIAS
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \clearpage
 \bibliographystyle{bst/unified}
 \bibliography{references}
