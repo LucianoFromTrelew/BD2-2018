@@ -50,7 +50,7 @@ aviones=# SELECT COUNT(*) FROM "modeloAvion";
 
 Los valores cargados para los modelos de avión cumplen con la estadística V(capacidad, modeloAvion) $\geq$ 1000
 
-\vspace*{5mm}
+\clearpage
 \lstset{style=sql}
 \begin{lstlisting}
 aviones=# SELECT COUNT(DISTINCT capacidad) FROM "modeloAvion";
@@ -80,7 +80,7 @@ Una vez ejecutados exitósamente los dos scripts de carga, se procede a insertar
 
 Por cada modelo de avión existente en la base de datos, se cargan 10000 aviones, con una cantidad de horas de vuelo aleatoria entre 100 y 5000, y un año aleatorio entre 1970 y 2018. El \emph{script} de carga correspondiente es \textbf{script\_carga\_aviones.sql}.
 
-La función que realiza la carga de aviones está compuesto por dos bucles \emph{FOR .. LOOP} anidados; el más externo itera sobre los modelos de avión, mientras que el interno sobre enteros entre 1 y 10000. 
+La función que realiza la carga de aviones está compuesto por dos bucles \emph{FOR .. LOOP} anidados; el más externo itera sobre los modelos de avión, mientras que el interno sobre enteros (desde 1 hasta 10000). 
 
 \vspace*{5mm}
 \lstset{style=sql}
@@ -93,7 +93,7 @@ aviones=# SELECT COUNT(*) FROM avion;
 \end{lstlisting}
 
 \subsection{Reparaciones}
-Por último, se cargan las reparaciones de los aviones. El \emph{script} correspondiente (\textbf{script\_carga\_reparaciones.sql}) consiste también de dos bucles \emph{FOR..LOOP} anidados; el primero itera sobre todos los aviones existentes, mientras que el segundo itera sobre un rango de valores aleatorios entre 1 y 10, que corresponden a la cantidad de reparaciones registradas para ese avión (puede haber registrado entre 1 a 10 reparaciones). El DNI del trabajador también va a ser un valor aleatorio entre todos los registrados
+Por último, se cargan las reparaciones de los aviones. El \emph{script} correspondiente (\textbf{script\_carga\_reparaciones.sql}) consiste también de dos bucles \emph{FOR..LOOP} anidados; el primero itera sobre todos los aviones existentes, mientras que el segundo itera sobre un rango de valores aleatorios entre 1 y 10, que corresponden a la cantidad de reparaciones registradas para ese avión (el avión puede haber registrado entre 1 a 10 reparaciones). El DNI del trabajador también va a ser un valor aleatorio entre todos los registrados
 \vspace*{5mm}
 \lstset{style=sql}
 \begin{lstlisting}
@@ -102,9 +102,9 @@ SELECT INTO dni_trabajador dni FROM trabajador ORDER BY random() LIMIT 1;
 
 La fecha de inicio de la reparación se obtiene aleatoriamente entre un intervalo de tiempo, empezando desde 01/01/2010, hasta el 01/03/2018. Por último, la fecha de fin de reparación, que por más que no es obligatoria, se obtiene a partir de sumar una cantidad de días aleatoria a la fecha de inicio (entre 2 y 30 días).
 
-Debido a los valores aleatorios, puede ocurrir que se intenten insertar dos veces una misma tupla (una reparación que tenga la misma clave primaria, compuesta del DNI del trabajador, el ID del avión, y la fecha de inicio de la reparación), por lo tanto se decidió que, frente a un intento de insertar un registro repetido, no hacer nada (no insertar la tupla conflictuante ni actualizar la existente).
+Debido a los valores aleatorios, puede ocurrir que se intenten insertar dos veces una misma tupla (una reparación que tenga la misma clave primaria, compuesta del DNI del trabajador, el ID del avión, y la fecha de inicio de la reparación), por lo tanto se decidió, frente a un intento de insertar un registro repetido, no hacer nada (no insertar la tupla conflictuante ni actualizar la existente).
 
-\vspace*{5mm}
+\clearpage
 \lstset{style=sql}
 \begin{lstlisting}
 INSERT INTO "trabajadorReparacion" VALUES(dni_trabajador, nro_avion, fecha_inicio, fecha_fin, tipo_falla) ON CONFLICT DO NOTHING;
@@ -153,7 +153,7 @@ El valor \emph{X} para hacer la consulta sobre las reparaciones de aviones será
 
 Ahora bien, como se pedía en la consulta, se deben recuperar las \emph{reparaciones para aviones cuya capacidad es = X} (1959) 
 
-%\vspace*{5mm}
+\vspace*{5mm}
 \lstset{style=sql}
 \begin{lstlisting}
 SELECT  tr."dniTrabajador", 
@@ -173,6 +173,7 @@ SELECT  tr."dniTrabajador",
             AND md.capacidad = 1959;
 \end{lstlisting}
 
+\clearpage
 \lstset{style=sql}
 \begin{lstlisting}
 aviones=# SELECT COUNT(*) FROM (
@@ -197,20 +198,100 @@ aviones=# SELECT COUNT(*) FROM (
 (1 row)
 \end{lstlisting}
 
-De \textbf{134712980} reparaciones registradas, \textbf{1537508} corresponden a aviones cuya capacidad es mayor a \textbf{1959}. La consulta fue resuelta en aproximádamente \textbf{28} segundos.   
+De \textbf{134712980} reparaciones registradas, \textbf{1537508} corresponden a aviones cuya capacidad es mayor a \textbf{1959}. El motor resuelve la consulta entre \textbf{28} y \textbf{33} segundos.
 
 \section{Analizando la consulta}
 \emph{Analizar el plan de ejecución de la consulta del punto anterior. Documentar en su informe} 
 
 ~\\
 
+
+
+%\clearpage
+\subsection{\emph{EXPLAN ANALYZE}}
+
 Utilizando la función de \emph{EXPLAIN ANALYZE} que nos provee el motor para analizar la consulta, arroja los siguientes resultados 
 
-\vspace*{5mm}
-\lstset{style=sql}
-\begin{lstlisting}
-\end{lstlisting}
+\begin{figure}[H]
+    \includegraphics[width=\textwidth, height=6cm]{dump-explain-analyze.png}
+    \caption{\emph{EXPLAIN ANALIZE} en \emph{pgadmin III} }
+\end{figure}
  
+Como se puede apreciar en la imagen, el motor ejecuta una \emph{búsqueda secuencial} en la tabla \emph{``trabajadorReparacion''} sobre el atributo \emph{``nroAvion''}, también en las tablas \emph{``avion''}, sobre el atributo \emph{``tipoModelo''}, y por último en la tabla \emph{``modeloAvion''}, sobre \emph{``capacidad''}     
+
+
+\subsection{\emph{PEV} (\emph{Postgres EXPLAIN Visualizer})}
+
+Otra herramienta disponible en \cite{pev} nos permite tener una salida gráfica mucho más amigable que la que provee la aplicación de escritorio \emph{pgadmin III}. Para generar el árbol de la consulta, se le debe proveer en formato \emph{JSON} la salida del \emph{EXPLAIN ANALYZE}. 
+
+\vspace*{5mm}
+\begin{lstlisting}
+EXPLAIN (ANALYZE true, FORMAT JSON)
+.
+.
+.
+\end{lstlisting}
+
+Nos genera el siguiente resultado
+
+\begin{figure}[H]
+    \includegraphics[width=\textwidth]{dump-pev.png}
+    \caption{Árbol generado por \emph{PEV}}
+\end{figure}
+
+Este último resultado indica claramente que la búsqueda secuencial que se realiza sobre la tabla \emph{\dq{trabajadorReparacion}} es la más costosa y la que más grande de toda la consulta. Tambíen muestra que es la segunda operación más lenta que se lleva a cabo (consumiendo 44\% del tiempo total).
+
+
+
+\section{Optimizaciones}
+\emph{Podría cambiar en algo el esquema físico de la base de datos de forma tal que se consiga algún plan de ejecución que acelere la consulta}
+
+~\\
+
+\subsection{Índice sobre \emph{\dq{trabajadorReparacion}}}
+
+Para mejorar el rendimiento de la consulta se podría crear un índice para la tabla \emph{\dq{trabajadorReparacion}}, sobre la columna \emph{\dq{nroAvion}}
+
+\vspace*{5mm}
+\begin{lstlisting}
+CREATE INDEX indice_tr_nro_avion ON "trabajadorReparacion" ("nroAvion");
+\end{lstlisting}
+
+Ahora bien, teniendo el índice creado, se analiza una vez más la consulta
+
+\begin{figure}[H]
+    \includegraphics[width=\textwidth]{dump-pev-index.png}
+    \caption{Análisis de la consulta empleando un índice sobre \emph{\dq{trabajadorReparacion}}}
+\end{figure}
+
+En este nuevo análisis, se puede ver que los tiempos bajaron drásticamente; primero y principal, de los 33 segundos que tardaba el \emph{plan de ejecución} anterior, este nuevo plan solo toma 3.4 segundos en completarse. Por otra parte, la búsqueda sobre la tabla \emph{\dq{trabajadorReparacion}} dejó de ser la operación más grande y costosa de toda la búsqueda (sin embargo sigue consumiendo más del 40\% del tiempo de la consulta).
+
+La búsqueda realizada sobre la tabla \emph{\dq{avion}} (sobre la columna \emph{\dq{tipoModelo}}) pasa a ser las que más tiempo consume, las más grande y costosa; esto sugiere la posibilidad de crear otro índice sobre esa tabla para mejorar la performance de la consulta. 
+
+\subsection{Índice sobre \emph{\dq{avion}}}
+
+Se crea el siguiente índice sobre la tabla \emph{\dq{avion}} 
+\vspace*{5mm}
+\begin{lstlisting}
+CREATE INDEX indice_avion_tipo_modelo ON avion ("tipoModelo");
+\end{lstlisting}
+
+Analizando por tercera vez la consulta, \emph{PEV} devuelve el siguiente árbol 
+\begin{figure}[H]
+    \includegraphics[width=\textwidth]{dump-pev-index-avion.png}
+    \caption{Nuevo análisis con un segundo índice sobre \emph{\dq{avion}}}
+\end{figure}
+
+Creado el segundo índice, se pueden ver nuevas mejoras. Lo primero para destacar es que las operaciones de búsqueda sobre las tablas \emph{\dq{trabajadorReparacion}} y \emph{\dq{avion}} ya no son las más pesadas, sino que ahora los \emph{JOINs} pasaron a ocupar tal puesto (debido a la gran cantidad de tuplas con la que se está trabajando)   
+
+\section{Conclusión}
+
+Como conclusión a este trabajo de laboratorio, se puede comentar que por cada índice creado en el apartado anterior, la performance en cuestión de tiempo de la consulta se mejoró en un 90\% por cada índice creado (de 33 segundos a 3,5 con el primer índice, y de 3,5 a 445 milisegundos con el segundo). 
+
+De esta manera se puede apreciar la importancia no sólo de saber interpretar lo que informan los resultados de funciones como \emph{EXPLAN ANALYZE}, sino también el uso de los índices, que fueron los que lograron bajaron los tiempos de ejecución. 
+
+Cabe aclarar que no todas las consultas a la base de datos tendrán el mismo rendimiento, ya que los índices fueron creados para acelerar la única consulta en particular con la que se trabajó.
+
 
 
 
@@ -221,7 +302,7 @@ Utilizando la función de \emph{EXPLAIN ANALYZE} que nos provee el motor para an
 % FIN DOCUMENTO, AHORA REFERENCIAS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \clearpage
-\bibliographystyle{bst/unified}
+\bibliographystyle{plainnat}
 \bibliography{references}
 
 \end{document}

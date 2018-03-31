@@ -34,7 +34,7 @@
 %Paquetes para idioma español y codifcación UTF8
 \usepackage[spanish]{babel}
 \usepackage[utf8x]{inputenc}
-%natbib
+%natbib, para bibliografía y referencias
 \usepackage[numbers]{natbib}
 %paquete de matemática, vuela
 \usepackage{amsmath}
@@ -42,11 +42,15 @@
 \usepackage{fourier}
 %paquete para URLs
 \usepackage{url}
+%paquete para ubicar las imágenes
+\usepackage{float}
 %paquete para imágenes y en dónde las tiene que buscar
 \usepackage{graphicx}
 \graphicspath{{images/}}
+%paquete para epígrafes
+\usepackage{subcaption}
 %paquete para definir los márgenes de la hoja
-\usepackage[left=2cm,right=2cm,top=2cm,bottom=2cm]{geometry}
+\usepackage[left=2cm,right=2cm,top=4cm,bottom=4cm]{geometry}
 %paquete para poner todos y comentarios
 \usepackage[colorinlistoftodos]{todonotes}
 %paquete para trabajar con código
@@ -68,4 +72,6 @@
 %\usepackage{titlesec}
 %\titlespacing*{\section}{0pt}{1.1\baselineskip}{\baselineskip}
 
+%Comando para poner doble comillas más fácil
+\newcommand{\dq}[1]{``#1''}
 

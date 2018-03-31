@@ -1,4 +1,4 @@
-EXPLAIN (ANALYZE true)
+EXPLAIN (ANALYZE true, FORMAT JSON)
 SELECT  tr."dniTrabajador", 
         tr."nroAvion",
         tr."fechaInicioReparacion",
