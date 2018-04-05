@@ -1,5 +1,10 @@
+/*
+    Script para cargar masivamente las reparaciones de los aviones
+ */
+
 CREATE OR REPLACE FUNCTION getEnteroAleatorio(min integer, max integer) RETURNS integer AS $$
 /*
+    Genera un entero aleatorio en el rango especificado
     Recibe dos enteros min y max
     Devuelve un entero aleatorio entre [min, max] 
 */
@@ -9,6 +14,11 @@ END;
 $$ LANGUAGE plpgsql;
 
 CREATE OR REPLACE FUNCTION getRandomDate(min timestamp, max timestamp) RETURNS SETOF date AS $$
+/*
+    Genera una fecha aleatoria en el rango especificado
+    Recibe dos timestamp min y max
+    Devuelve una fecha aleatoria entre [min, max]
+ */
 BEGIN
 
     RETURN QUERY
@@ -19,6 +29,11 @@ $$ LANGUAGE plpgsql;
 
 
 CREATE OR REPLACE FUNCTION cargarReparaciones() RETURNS integer AS $$
+/*
+    Carga masivamente las reparaciones
+    No recibe nada
+    Devuelve un entero
+ */
 DECLARE
     nro_avion integer;
     dni_trabajador integer;

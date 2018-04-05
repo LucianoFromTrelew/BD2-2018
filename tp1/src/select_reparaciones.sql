@@ -1,4 +1,6 @@
-EXPLAIN (ANALYZE true, FORMAT JSON)
+/*
+    Consulta sobre aviones que tengan una capacidad de 1959
+ */
 SELECT  tr."dniTrabajador", 
         tr."nroAvion",
         tr."fechaInicioReparacion",

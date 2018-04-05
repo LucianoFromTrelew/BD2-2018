@@ -1,5 +1,11 @@
-﻿CREATE OR REPLACE FUNCTION getEnteroAleatorio(min integer, max integer) RETURNS integer AS $$
+﻿/*
+    Script para cargar masivamente los aviones
+ */
+
+
+CREATE OR REPLACE FUNCTION getEnteroAleatorio(min integer, max integer) RETURNS integer AS $$
 /*
+    Genera un entero aleatorio en el rango especificado
     Recibe dos enteros min y max
     Devuelve un entero aleatorio entre [min, max] 
 */
@@ -11,6 +17,8 @@ $$ LANGUAGE plpgsql;
 CREATE OR REPLACE FUNCTION getUltimoAvion() RETURNS SETOF integer AS $$
 /*
     Devuelve el id del ultimo avion insertado
+    No recibe nada
+    Devuelve el id del último avión ingresado
 */
 BEGIN
 	RETURN QUERY
@@ -21,6 +29,8 @@ $$ LANGUAGE plpgsql;
 CREATE OR REPLACE FUNCTION cargarAviones() RETURNS integer AS $$
 /*
     Carga aviones masivamente en la table 'avion'
+    No recibe nada
+    Devuelve un entero
 */
 DECLARE 
 	MIN_HORAS CONSTANT integer := 100;

@@ -1,3 +1,6 @@
+"""
+Script utilizado para generar el script .sql para cargar masivamente los modelos de avión
+"""
 import csv
 import random
 MIN_CAPACIDAD = 50

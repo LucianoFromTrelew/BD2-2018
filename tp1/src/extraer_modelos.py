@@ -1,3 +1,6 @@
+"""
+Script utililizado para extraer los tipos de nave del dataset de acciones aéreos
+"""
 import csv
 
 def main():

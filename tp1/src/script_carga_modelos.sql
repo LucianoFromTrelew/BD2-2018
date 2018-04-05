@@ -1,3 +1,7 @@
+/*
+    Script (generado automáticamente) para cargar los modelos de avión 
+ */
+
 INSERT INTO "modeloAvion" VALUES(13, 'AAC-1 Toucan', 854);
 INSERT INTO "modeloAvion" VALUES(14, 'AEGK', 861);
 INSERT INTO "modeloAvion" VALUES(15, 'AT L98 Carvair', 175);
