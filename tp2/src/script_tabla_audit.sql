@@ -6,11 +6,7 @@ CREATE TABLE IF NOT EXISTS audit (
     tabla TEXT,
     operacion TIPO_OPERACION,
     usuario TEXT,
-    fecha_hora TIMESTAMP PRIMARY KEY,
-    -- Regla para verificar que el nombre de la tabla sea correcto
-    CONSTRAINT "check_nombre_tabla" CHECK(
-        es_nombre_tabla(tabla)
-    )
+    fecha_hora TIMESTAMP PRIMARY KEY
 );
 
 CREATE OR REPLACE FUNCTION es_nombre_tabla(tabla text) RETURNS BOOLEAN AS 
@@ -27,4 +23,8 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-
+-- Regla para verificar que el nombre de la tabla sea correcto
+ALTER TABLE audit
+ADD CONSTRAINT 'check_nombre_tabla' CHECK(
+    es_nombre_tabla(tabla)
+);
