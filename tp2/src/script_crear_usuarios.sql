@@ -1,0 +1,2 @@
+CREATE USER "userA" WITH PASSWORD 'user';
+CREATE USER "userB" WITH PASSWORD 'user';
