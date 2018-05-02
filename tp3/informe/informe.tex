@@ -1,0 +1,325 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% En 'inclues.tex' se encuentran la importación de paquetes necesarios
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\input{includes}
+\input{settings}
+
+
+\begin{document}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% En 'titlepage.tex' se encuentra la página de título
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\input{titlepage}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% INDICE
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\clearpage
+\tableofcontents
+\clearpage
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% ABSTRACT
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%\begin{abstract}
+%Your abstract.
+%\end{abstract}
+
+\section{Creación de la tabla \emph{audit}}
+
+\emph{Crear una tabla \dq{audit} sobre la base de datos \emph{tp1-Aviones} con campos para registrar un nombre de tabla de la base de datos, una operación, un usuario, y una fecha y hora} 
+
+\emph{\textbf{Los scripts a los que se haga referencia se pueden encontrar en el directorio scripts/}} 
+
+\subsection{Definición de la tabla}
+
+\emph{\textbf{El script necesario para la creación de la tabla y dependencias es \\ \dq{script\_tabla\_audit.sql}}} 
+
+~\\
+
+La primer medida tomada para crear la tabla, fue crear un tipo de dato enumerado \emph{TIPO\_OPERACION} compuesto por las cuatro operaciones posibles en SQL estándar 
+
+\vspace*{5mm}
+\lstset{style=sql}
+\begin{lstlisting}
+CREATE TYPE TIPO_OPERACION AS ENUM ('SELECT', 'INSERT', 'UPDATE', 'DELETE');
+\end{lstlisting}
+
+Luego, se define la tabla empleando el nuevo tipo de dato y otros proveídos por el motor. Los registros de la tabla serán unívocamente identificados por su fecha y hora (clave primaria)
+
+\vspace*{5mm}
+\lstset{style=sql}
+\begin{lstlisting}
+CREATE TABLE IF NOT EXISTS audit (
+    tabla TEXT,
+    operacion TIPO_OPERACION,
+    usuario TEXT,
+    fecha_hora TIMESTAMP PRIMARY KEY
+);
+\end{lstlisting}
+
+Esta definición de la tabla sin embargo no cumple con la condición requerida de que solamente se ingresen nombres válidos de tablas pertenecientes a la base de datos en el campo \dq{tabla}. Por lo tanto, se debe crear una \emph{regla de integridad} para verificar que el dato sea correcto.
+
+Dentro de la definición de una regla de integridad, el motor \emph{PostgreSQL} no acepta subconsultas, por lo tanto se debe crear una función que verifique que una cadena se corresponda con el nombre de una tabla en la base de datos 
+
+\vspace*{5mm}
+\lstset{style=sql}
+\begin{lstlisting}
+CREATE OR REPLACE FUNCTION es_nombre_tabla(tabla text) RETURNS BOOLEAN AS 
+$$
+BEGIN
+    RETURN (SELECT tabla IN (
+            SELECT table_name 
+            FROM information_schema.tables 
+            WHERE table_schema='public'
+    ));
+END;
+$$ LANGUAGE plpgsql;
+\end{lstlisting}
+
+Teniendo la función definida, se crea la restricción sobre la columna \dq{tabla} 
+
+\vspace*{5mm}
+\lstset{style=sql}
+\begin{lstlisting}
+ALTER TABLE audit
+ADD CONSTRAINT 'check_nombre_tabla' CHECK(
+    es_nombre_tabla(tabla)
+);
+\end{lstlisting}
+
+Una vez creada la tabla, se puede probar su integridad haciendo inserciones con nombres de tablas que no exitan en la base de datos y/o con tipos de operaciones que no sean de SQL estándar
+
+\clearpage
+\vspace*{5mm}
+\lstset{style=sql}
+\begin{lstlisting}
+aviones=# INSERT INTO audit VALUES ('una_tabla_que_no_existe', 'SELECT', 'usuario', now()); 
+ERROR:  new row for relation "audit" violates check constraint "check_nombre_tabla"
+DETAIL:  Failing row contains (una_tabla_que_no_existe, SELECT, usuario, 2018-04-19 12:40:00.025654).
+\end{lstlisting}
+
+\lstset{style=sql}
+\begin{lstlisting}
+aviones=# INSERT INTO audit VALUES ('avion', 'una_operacion_que_no_existe', 'usuario', now());
+ERROR:  invalid input value for enum tipo_operacion: "una_operacion_que_no_existe" LINE 1: INSERT INTO audit VALUES ('avion', 'una_operacion_que_no_exi...
+\end{lstlisting}
+
+\subsection{Definición de \emph{triggers}}
+
+\emph{Crear triggers que se ejecuten después de una inserción y después de una eliminación sobre la tabla \emph{avion}, registrando la operación en la tabla de auditoría} 
+
+\emph{\textbf{El script necesario para la creación de los triggers es \dq{script\_trigger\_avion.sql}}} 
+
+
+~\\
+
+Un \emph{trigger} se define como una \textbf{unidad de código} que se ejecuta automáticamente ante la ocurrencia de un evento. Un evento puede ser una operación SQL sobre una tabla especificada \cite{trigger}.
+
+A continuación se definen \emph{triggers} que serán disparados \textbf{después} de una inserción y una eliminación sobre la tabla \emph{avion} a modo de auditoría.
+
+Como sucedía con las reglas de integridad, se debe definir una función que será ejecutada al momento de que ocurra el evento; \emph{PostgreSQL} especifica que dicha funci debe devolver un \emph{trigger}  
+
+\clearpage
+\lstset{style=sql}
+\begin{lstlisting}
+CREATE OR REPLACE FUNCTION registrar_operacion_avion() RETURNS TRIGGER as 
+$$
+BEGIN
+    INSERT INTO audit VALUES ('avion', CAST(TG_OP AS tipo_operacion), CAST(user AS TEXT), now());
+
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+\end{lstlisting}
+
+Dentro de las funciones ejecutadas por los \emph{triggers} se puede acceder a varios argumentos, siendo uno de ellos la operación de SQL que estaba vinculada con la definición del \emph{trigger} (\emph{TG\_OP})  
+
+\vspace*{5mm}
+\lstset{style=sql}
+\begin{lstlisting}
+CREATE TRIGGER trigger_insercion_avion 
+    AFTER INSERT ON avion
+    EXECUTE PROCEDURE registrar_operacion_avion();
+\end{lstlisting}
+
+\lstset{style=sql}
+\begin{lstlisting}
+CREATE TRIGGER trigger_eliminacion_avion 
+    AFTER DELETE ON avion
+    EXECUTE PROCEDURE registrar_operacion_avion();
+\end{lstlisting}
+
+Con una única función que realiza una inserción en la tabla de auditoría con los datos necesarios, se definieron los dos \emph{triggers} requeridos.
+
+\section{Creación de usuarios}
+\emph{Crear dos usuarios en la base de datos TP1-Aviones, denominados userA y userB} 
+
+\emph{\textbf{El script necesario para la creación de los usuarios es \dq{script\_crear\_usuarios.sql}}} 
+
+
+~\\
+
+Para crear los dos usuarios requeridos sin otorgarle ningún permiso todavía, no hace falta más que asignarles un nombre y una contraseña para poder ingresar al servidor
+
+\vspace*{5mm}
+\lstset{style=sql}
+\begin{lstlisting}
+CREATE USER "userA" WITH PASSWORD 'user';
+CREATE USER "userB" WITH PASSWORD 'user';
+\end{lstlisting}
+
+\subsection{Permisos de usuario}
+\emph{Investigar y documentar la gramática y diferentes modificadores de las sentencias GRANT y REVOKE en Postgres} 
+
+Los comandos \emph{GRANT} \cite{grant} y \emph{REVOKE} \cite{revoke} se utilizan para conceder o remover permisos y/o roles a un usuario \footnote{En \emph{PostgreSQL} los usuarios son roles con el permiso de \emph{LOGIN} por defecto}   
+
+\subsubsection{GRANT}
+
+El comando \emph{GRANT} tiene dos variantes de aplicación; una sirve para asignar permisos sobre objetos de la base de datos a un usuario o un rol, y la otra para asigarle un rol a un usuario (incluirlo en el rol, o otorgarle membresía).
+
+Con respecto a la primer variante, algunos permisos que se pueden otorgar son:
+\begin{itemize}
+    \item Ejecutar operaciones (SELECT, INSERT, UPDATE, DELETE, TRUNCATE, REFERENCES, TRIGGER) sobre una tabla o todas las tablas de un esquema.
+    \item Ejecutar operaciones (SELECT, INSERT, UPDATE, REFERENCES) sobre una columna o todas las columnas de una tabla.
+    \item Conexión o creación de nuevas bases de datos.
+    \item Uso y/o creación de:
+        \begin{itemize}
+        \item Secuencias
+        \item Funciones
+        \item Roles
+        \item Esquemas
+        \item Espacios de tablas (tablespace)
+        \item Tipos
+        \end{itemize}
+\end{itemize}
+
+Se pueden asignar permisos individuales sobre un objeto, o todos los permisos sobre dicho objeto con la sentencia \dq{GRANT ALL PRIVILEGES ON [...] TO usuario}.
+
+La opción "[...] WITH GRANT OPTION", lo cual le permite al usuario beneficiario asignarle sus permisos asignados a otro usuario que no los tenga.
+
+Para asignar permisos por defecto a cualquier usuario nuevo, o para asignárselos a los usuarios ya creados y a los futuros, se puede otorgar los permisos a \emph{PUBLIC}. Se puede pensar en \emph{PUBLIC} como si fuese un grupo implícito al cual están agregados todos los roles y usuarios.
+
+Todos los roles van a tener la suma de todos sus permisos otorgados directamente, más los otorgados a \emph{PUBLIC}.
+
+Asignando un rol a un usuario, se le otorgan todos los permisos que tiene dicho rol al usuario.
+
+A diferencia del \emph{GRANT} para permisos, no se puede asignar un rol a \emph{PUBLIC}. 
+
+\subsubsection{REVOKE}
+
+\emph{REVOKE} es la contraparte de \emph{GRANT}. Se utiliza para remover permisos de un usuario/rol. La sintaxis es bastante parecida al comando para asignar, permitiendo eliminar todos los permisos sobre un objeto en una sola instrucción.
+
+También incluye la posibilidad de eliminar los permisos \emph{en cascada} (quitar permisos y sus dependencias automáticamente).
+
+\subsection{Otorgando permisos}
+\emph{Otorgar permisos de selección al usuario userA sobre todas las tablas y permisos de inserción sobre la tabla \emph{audit} con WITH GRANT OPTION. Al usuario userB otorgarle permisos de selección, inserción, y actualización sobre las tablas \emph{avion, piloto, y pilotoAvion} } 
+
+\emph{\textbf{El script para asignar permisos es \dq{script\_permisos.sql}}} 
+
+~\\
+
+Se asignan los permisos requeridos a los usuarios \dq{userA} y a \dq{userB} con el comando \emph{GRANT} 
+
+\vspace*{5mm}
+\lstset{style=sql}
+\begin{lstlisting}
+GRANT SELECT ON ALL TABLES IN SCHEMA public TO "userA";
+GRANT INSERT ON TABLE audit TO "userA" WITH GRANT OPTION;
+
+GRANT SELECT, INSERT, UPDATE ON TABLE avion, piloto, "pilotoAvion" TO "userB";
+\end{lstlisting}
+
+Para ver los permisos recientemente asignados, podemos ejecutar la siguiente consulta SQL
+
+\vspace*{5mm}
+\lstset{style=sql}
+\begin{lstlisting}
+SELECT grantee, table_name, privilege_type, is_grantable 
+FROM information_schema.role_table_grants 
+WHERE table_schema='public'
+AND grantee LIKE 'user_' 
+ORDER BY grantee, table_name;
+\end{lstlisting}
+
+Si se intenta realizar una operación estando conectado con un usuario que no tiene los permisos para dicha operación, el servidor nos mostrará un error indicando que no se tienen los permisos suficientes.
+
+Por ejemplo, conectarse al servidor con el usuario \dq{userB}, e intentar listar toda la tabla de auditoría
+
+\vspace*{5mm}
+\lstset{style=bash}
+\begin{lstlisting}
+psql -h <HOST_DEL_SERVIDOR> -p <PUERTO_DEL_SERVIDOR> -d aviones -U userB
+\end{lstlisting}
+
+\lstset{style=sql}
+\begin{lstlisting}
+aviones=> SELECT * FROM audit;
+ERROR:  permission denied for relation audit
+\end{lstlisting}
+
+Ahora bien, si, estando conectado con el usuario \dq{userB}, se intenta hacer una inserción sobre la tabla \dq{avion} (la cual tiene los permisos necesarios para realizar la operación), sucede lo siguiente
+
+\lstset{style=sql}
+\begin{lstlisting}
+aviones=> INSERT INTO avion VALUES (1, 50, 1990, 2000);
+ERROR:  permission denied for relation audit
+CONTEXT:  SQL statement "INSERT INTO audit VALUES ('avion', CAST(TG_OP AS tipo_operacion), CAST(user AS TEXT), now())"
+PL/pgSQL function registrar_operacion_avion() line 3 at SQL statement
+\end{lstlisting}
+
+Al querer insertar en la tabla \dq{avion}, se dispara el \emph{trigger} definido para dicha tabla y operación; el usuario \dq{userB}, al no tener permisos para escribir sobre la tabla \dq{audit}, el servidor rechaza la petición (por más que sí pueda escribir sobre la tabla avión).
+
+Este problema se puede solucionar conectándose con el usuario \dq{userA} que tiene permisos para escribir sobre \dq{audit} y también para transmitir su permiso
+
+\emph{\textbf{El script es \dq{script\_userB\_permisos\_audit.sql}}} 
+
+\vspace*{5mm}
+\lstset{style=bash}
+\begin{lstlisting}
+psql -h <HOST_DEL_SERVIDOR> -p <PUERTO_DEL_SERVIDOR> -d aviones -U userA
+\end{lstlisting}
+
+\lstset{style=bash}
+\begin{lstlisting}
+aviones=> GRANT INSERT ON TABLE audit TO "userB";
+GRANT
+\end{lstlisting}
+
+Si ahora probamos de nuevo insertar con el usuario anterior
+
+\vspace*{5mm}
+\lstset{style=sql}
+\begin{lstlisting}
+aviones=> GRANT INSERT ON TABLE audit TO "userB";
+GRANT
+\end{lstlisting}
+
+Se puede ver en la tabla de auditoría que la tupla fue insertada exitosamente (con algún usuario que tenga permisos para ver los datos de la tabla \dq{audit})
+\vspace*{5mm}
+\lstset{style=sql}
+\begin{lstlisting}
+aviones=> SELECT * FROM audit ORDER BY fecha_hora DESC LIMIT 1;
+ tabla | operacion | usuario |         fecha_hora         
+-------+-----------+---------+----------------------------
+ avion | INSERT    | userB   | 2018-04-19 14:38:57.697337
+(1 row)
+\end{lstlisting}
+
+
+
+
+
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% FIN DOCUMENTO, AHORA REFERENCIAS
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\clearpage
+\bibliographystyle{plainnat}
+\bibliography{references}
+
+\end{document}
+\todo[inline, color=green!40]{This is an inline comment.}
