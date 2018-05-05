@@ -7,7 +7,7 @@ Repositorio para la materia "Bases de Datos 2" de la UNPSJB, Sede Trelew, 2018
 
 #### Para levantar la BD
 
-Crear un archivo "compose.env" con las siguientes variables de entorno en la forma VARIABLE=VALOR (**sin espacios**):
+Crear un archivo `compose.env` con las siguientes variables de entorno en la forma `VARIABLE=VALOR` (**sin espacios**):
 
 * *POSTGRES_PASSWORD*
 * *POSTGRES_USER*
