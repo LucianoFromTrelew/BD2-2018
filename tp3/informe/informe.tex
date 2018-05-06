@@ -26,6 +26,195 @@
 %Your abstract.
 %\end{abstract}
 
+\section{Creación de la tabla \emph{aeropuerto}}
+
+\emph{Crear un tipo Aeropuertos que almacene las siguientes propiedades: nombre del aeropuerto, ubicación (ciudad, provincia, país), medidas de la pista (longitud, ancho, tipo de compuesto) y una colección de las aerolíneas que trabajan en el mismo} 
+
+\emph{\textbf{Los scripts a los que se haga referencia se pueden encontrar en el directorio scripts/}} 
+
+\subsection{Definición del tipo \emph{t\_aeropuerto}}
+
+\emph{\textbf{El script necesario para la creación del tipo de dato compuesto y de la tabla es "script\_tabla\_aeropuerto.sql"}} 
+
+~\\
+
+El tipo compuesto \emph{t\_aeropuerto} estará formado por los siguientes campos:
+\begin{itemize}
+    \item \emph{nombre} (100 caracteres) 
+    \item \emph{ubicacion} (de tipo \emph{t\_ubicacion}) 
+    \item \emph{medidas} (de tipo \emph{t\_medidas}) 
+    \item \emph{aerolineas} (arreglos de cadenas) 
+\end{itemize}
+
+A continuación se describen la estructuras de \emph{t\_ubicacion} y de \emph{t\_medidas}  
+
+\subsubsection{\emph{t\_ubicacion}}
+
+Este tipo de dato representa la ubicación de un aeropuerto, así tendrá los campos \emph{ciudad} (50 caracteres), \emph{provincia} (también 50 caracteres), y \emph{pais} (30 caracteres). 
+
+\subsubsection{\emph{t\_medidas}}
+
+Para modelar las medidas de la pista de un aeropuerto, se utilizarán los campos \emph{longitud}, \emph{ancho} (ambos dos números enteros), y \emph{compuesto} (100 caracteres)  
+
+\subsection{Definición de la tabla}
+
+La tabla \emph{aeropuerto} se define en base al tipo previamente creado, con la opción \emph{CREATE TABLE (...) \textbf{OF} <type>}. 
+
+\vspace*{5mm}
+\lstset{style=sql}
+\begin{lstlisting}
+CREATE TABLE aeropuerto OF t_aeropuerto;
+\end{lstlisting}
+
+\subsection{Carga de aeropuertos}
+
+\emph{Crear una tabla aeropuertos basada en el tipo creado en el punto 1. Hacer varios INSERT (y documentarlos) para poblar la tabla aeropuertos con datos} 
+
+Para cargar datos en la tabla \emph{aeropuerto}, primero se consiguieron datos reales de aeropuertos y aerolíenas de \cite{datasets}; mediante un \emph{script} escrito en Python (disponible en el directorio \textbf{\emph{generar\_aeropuertos}}), se creó el \emph{script} de SQL correspondiente para realizar la carga (\textbf{\emph{script\_carga\_aeropuertos.sql}}).
+
+Cada aeropuerto cargado tiene un nombre de ciudad y un país (en el campo de \emph{provincia} se cargó el mismo nombre que el de la ciudad debido a la ausencia de tal dato en el \emph{dataset} de aeropuertos); un entero aleatorio entre 1000 y 5000 para la longitud; un entero aleatorio entre 10 y 500 para el ancho; un compuesto aleatorio (la lista de compuesto se puede encontrar en \cite{compuestos}); una cantidad aleatoria (entre 10 y 150) de aerolíneas que trabajan en el aeropuerto.
+
+\vspace*{5mm}
+\lstset{style=sql}
+\begin{lstlisting}
+aviones=# SELECT COUNT(*) FROM aeropuerto;
+ count 
+-------
+  7179
+(1 row)
+\end{lstlisting}
+
+\section{Creación de la tabla \emph{aeropuerto\_hangares}}
+
+\emph{Crear una subtabla aeropuertosHangares de aeropuertos que refleje aquellos aeropuertos en los que se alquilan hangares que agregue la siguiente informacion: precioEspacio y una coleccion de espacios que registre para cada elemento el nro. de parcela, ocupado (si/no) y una referencia a un avion (objeto de la tabla homónima, deberán considerarse los pasos para tratar a los aviones como objetos OID) Hacer varios INSERT (y documentarlos) para poblar la tabla aeropuertosHangares con datos.} 
+
+\emph{\textbf{El script necesario para la creación del tipo de dato compuesto y de la tabla "script\_tabla\_hangares.sql"}} 
+
+~\\
+
+
+Valiéndose de las características \emph{objeto-relacional} que incluye el motor \emph{Postrgres}, se puede definir una tabla como extensión de otra (hereda todos sus atributos).
+
+En este caso, no solamente se deben heredar todos los atributos de la tabla \emph{aeropuerto}, sino que también agregar otros nuevos (un campo para el precio del espacio y una colección de los espacios). 
+
+\vspace*{5mm}
+\lstset{style=sql}
+\begin{lstlisting}
+CREATE TABLE aeropuerto_hangares (
+    precio_espacio  integer,
+    espacios        t_espacio[]
+) INHERITS (aeropuerto);
+\end{lstlisting}
+
+\subsection{\emph{t\_espacio}}
+
+El tipo de dato \emph{t\_espacio} está conformado por los campos
+\begin{itemize}
+    \item \emph{numero\_parcela} 
+    \item \emph{esta\_ocupado} (valor booleano) 
+    \item \emph{oid\_avion} (hace referencia al \emph{OID} \footnote{Entero sin signo de cuatro bytes utilizado internamente por el motor para identificar unívocamente \emph{todos} los objetos de la base de datos \cite{oid}} de un avión)
+\end{itemize}
+
+\subsection{Dominio \emph{d\_espacio\_avion}}
+
+Para emular el comportamiento de una clave foránea en el tipo compuesto definido anteriormente (ya que el motor no permite dicha estructura), se debe crear un \emph{dominio} con una regla de integridad que verifique si el valor del campo es efectivamente el \emph{OID} de un avión.
+
+Ahora bien, como el motor impone la restricción de no admitir subconsultas en las definiciones de las reglas de integridad, se debe crear una función que realice consulta. Dicha función debe devolver un \textbf{valor booleano}. 
+
+\\~
+
+Para probar la regla de integridad, se puede intentar insertar un registro que contenga en el campo \emph{oid\_avion} un valor que no se corresponda con el identificar de un avión. 
+
+A continuación se muestra un ejemplo que intenta ingresar una tupla en \emph{aeropuerto\_hangares} con un espacio que tiene como referencia al avión el valor 10 (no perteneciente a ningún avión registrado)
+
+\vspace*{5mm}
+\lstset{style=sql}
+\begin{lstlisting}
+aviones=# INSERT INTO aeropuerto_hangares VALUES (
+    'coso', 
+    ROW('coso', 'coso', 'coso'),
+    ROW(100, 100, 'coso'),
+    ARRAY['coso'],
+    100,
+    ARRAY[CAST(ROW(15, false, 10) AS t_espacio)]
+);
+ERROR:  value for domain d_espacio_avion violates check constraint "d_espacio_avion_check"
+\end{lstlisting}
+
+\subsection{Cargas de aeropuertos con hangares}
+
+Debido a la cantidad de aviones existentes en la base, cada comprobación de la regla de integridad del dominio \emph{d\_espacio\_avion} lleva mucho tiempo, impactando también la inserción sobre la tabla \emph{aeropuerto\_hangares}. Por lo tanto se decidió solamente insertar 100 tuplas en esta última tabla.
+
+Reutilizando el \emph{script} de Python (ubicado en el directorio \textbf{\emph{generar\_hangares}}) implementado para la carga de la tabla \emph{aeropuerto}, se generó un nuevo \emph{script} para la carga de \emph{aeropuerto\_hangares} (\textbf{\emph{script\_carga\_hangares.sql}}).
+
+Cada tupla tiene los atributos del aeropuerto, e incluye un valor aleatorio entre 3000 y 100000 para el precio del espacio, y un arreglo con los distintos espacios; cada espacio va a tener un valor aleatorio como número de parcela, un valor booleano aleatorio, y un \emph{OID} de avión válido (también aleatorio).
+
+Para conseguir el rango de valores de \emph{OIDs} de aviones válidos, se ejecutó la siguiente consulta:  
+
+\vspace*{5mm}
+\lstset{style=sql}
+\begin{lstlisting}
+aviones=# (SELECT oid FROM AVION ORDER BY oid ASC LIMIT 1)
+UNION ALL 
+(SELECT oid FROM AVION ORDER BY oid DESC LIMIT 1);
+   oid    
+----------
+    20552
+ 24510558
+(2 rows)
+\end{lstlisting}
+
+
+\section{Consultas}
+
+\subsection{Aeropuertos por aerolíneas}
+\emph{Mostrar todos los aeropuertos que trabajan con la aerolinea X (elegir un valor de X de acuerdo a los datos existentes en la tabla aeropuertos) (uso del ANY)} 
+
+\\~
+
+Tomando como nombre de aerolínea a "Aerolíneas Argentinas", que está cargado en por lo menos una tupla de la tabla, la consulta se podría escribir de la siguiente manera:
+
+\vspace*{5mm}
+\lstset{style=sql}
+\begin{lstlisting}
+SELECT nombre
+    FROM aeropuerto 
+    WHERE 'Aerolineas Argentinas' = ANY(aerolineas);
+\end{lstlisting}
+
+\begin{figure}[H]
+    \includegraphics[width=\textwidth]{any.png}
+    \caption{Gramática del operador \emph{ANY} \cite{any}}
+\end{figure}
+
+\begin{quote}\itshape
+    La \textbf{expresión} del lado izquierdo es evaluada y comparada con cada elemento del \textbf{arreglo} usando el \textbf{operador} dado, el cual debe devolver un resultado lógico. El resultado de \emph{ANY} es verdader si se obtuvo por lo menos un valor verdadero. El resultado es falso si ningún valor verdadero fue devuelto \cite{any}    
+\end{quote}
+
+Dado el caso de que no se supiera el nombre exacto de la aerolínea que se quiere buscar, la consulta anterior no serviría. En tal caso, se debería hacer uso del operador \emph{ILIKE} y de las \emph{cartas bravas} (\emph{wildcards}) que provee SQL para buscar patrones \cite{pattern}.
+
+\vspace*{5mm}
+\lstset{style=sql}
+\begin{lstlisting}
+SELECT nombre
+    FROM aeropuerto, UNNEST(aerolineas) AS nombres_aerolineas 
+    WHERE nombres_aerolineas ILIKE '%argentina%';
+\end{lstlisting}
+
+Sin embargo la consulta anterior no cumpliría con la consigna debido a que se solicitaba explícitamente emplear el operador \emph{ANY}.
+
+\subsection{Aeropuertos con todos los hangares alquilados}
+
+\emph{Mostrar todos los aeropuertos de los cuales se tiene alquilados hangares y que estén ocupados todas las parcelas (uso del ALL) en la consulta deben aparecer los nros. de avion y descripción del modelo de avion que estén ocupando cada parcela.} 
+
+
+
+\section{Comparación entre \emph{ODB} y \emph{RDB}}
+
+
+
+
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % FIN DOCUMENTO, AHORA REFERENCIAS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

@@ -1,4 +1,4 @@
-SELECT nombre, (ubicacion).ciudad 
+SELECT nombre
     FROM aeropuerto 
     WHERE 'Aerolineas Argentinas' = ANY(aerolineas);
 

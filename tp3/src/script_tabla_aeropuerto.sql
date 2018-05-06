@@ -1,8 +1,3 @@
-CREATE TABLE IF NOT EXISTS compuesto (
-    id_compuesto integer PRIMARY KEY,
-    descripcion varchar(100)
-); 
-
 CREATE TYPE t_ubicacion AS (
     ciudad      varchar(50),
     provincia   varchar(50),

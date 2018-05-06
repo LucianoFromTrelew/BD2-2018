@@ -32,31 +32,36 @@ def get_airport_insert_string(aeropuerto):
         aerolineas=aeropuerto['aerolineas']
     )
 
+def create_airport(iter_airport, airlines_csv):
+    """Arma el aeropuerto con todos sus datos"""
+    aeropuerto = {}
+    aeropuerto['nombre'] = iter_airport['name'].replace("\'", " ")
+    aeropuerto['ciudad'] = iter_airport['city'].replace("\'", " ")
+    aeropuerto['pais'] = iter_airport['country'].replace("\'", " ")
+    aeropuerto['longitud'] = get_random_int(
+        config.MIN_LONG, config.MAX_LONG)
+
+    aeropuerto['ancho'] = get_random_int(
+        config.MIN_ANCHO, config.MAX_ANCHO)
+
+    aeropuerto['compuesto'] = get_random_choices(
+        config.COMPUESTOS, 1)[0]
+
+    aeropuerto['aerolineas'] = [
+        '{}'.format(airline['name'].replace("\'", " ")) for airline in get_random_choices(
+            airlines_csv, get_random_int(
+                config.MIN_AEROLINEAS,
+                config.MAX_AEROLINEAS))
+    ]
+    return aeropuerto
+
 def main():
     with open("script_carga_aeropuertos.sql", "w") as f:
         with open("data/airports.csv", newline='') as airports_csv:
             reader = csv.DictReader(airports_csv)
             airlines = get_data_from_csv('data/airlines.csv')
             for airport in reader:
-                aeropuerto = {}
-                aeropuerto['nombre'] = airport['name'].replace("\'", " ")
-                aeropuerto['ciudad'] = airport['city'].replace("\'", " ")
-                aeropuerto['pais'] = airport['country'].replace("\'", " ")
-                aeropuerto['longitud'] = get_random_int(
-                    config.MIN_LONG, config.MAX_LONG)
-
-                aeropuerto['ancho'] = get_random_int(
-                    config.MIN_ANCHO, config.MAX_ANCHO)
-
-                aeropuerto['compuesto'] = get_random_choices(
-                    config.COMPUESTOS, 1)[0]
-
-                aeropuerto['aerolineas'] = [
-                    '{}'.format(airline['name'].replace("\'", " ")) for airline in get_random_choices(
-                        airlines, get_random_int(
-                            config.MIN_AEROLINEAS,
-                            config.MAX_AEROLINEAS))
-                ]
+                aeropuerto = create_airport(airport, airlines)
 
                 f.write(get_airport_insert_string(aeropuerto))
 
