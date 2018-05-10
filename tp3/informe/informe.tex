@@ -17,8 +17,7 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \clearpage
 \tableofcontents
-\clearpage
-
+\clearpage 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % ABSTRACT
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -34,7 +33,7 @@
 
 \subsection{Definición del tipo \emph{t\_aeropuerto}}
 
-\emph{\textbf{El script necesario para la creación del tipo de dato compuesto y de la tabla es "script\_tabla\_aeropuerto.sql"}} 
+\emph{\textbf{El script necesario para la creación del tipo de dato compuesto y de la tabla es \\ "script\_tabla\_aeropuerto.sql"}} 
 
 ~\\
 
@@ -88,7 +87,7 @@ aviones=# SELECT COUNT(*) FROM aeropuerto;
 
 \emph{Crear una subtabla aeropuertosHangares de aeropuertos que refleje aquellos aeropuertos en los que se alquilan hangares que agregue la siguiente informacion: precioEspacio y una coleccion de espacios que registre para cada elemento el nro. de parcela, ocupado (si/no) y una referencia a un avion (objeto de la tabla homónima, deberán considerarse los pasos para tratar a los aviones como objetos OID) Hacer varios INSERT (y documentarlos) para poblar la tabla aeropuertosHangares con datos.} 
 
-\emph{\textbf{El script necesario para la creación del tipo de dato compuesto y de la tabla "script\_tabla\_hangares.sql"}} 
+\emph{\textbf{El script necesario para la creación del tipo de dato compuesto y de la tabla es \\ "script\_tabla\_hangares.sql"}} 
 
 ~\\
 
@@ -117,7 +116,13 @@ El tipo de dato \emph{t\_espacio} está conformado por los campos
 
 \subsection{Dominio \emph{d\_espacio\_avion}}
 
-Para emular el comportamiento de una clave foránea en el tipo compuesto definido anteriormente (ya que el motor no permite dicha estructura), se debe crear un \emph{dominio} con una regla de integridad que verifique si el valor del campo es efectivamente el \emph{OID} de un avión.
+Para emular el comportamiento de una clave foránea en el tipo compuesto definido anteriormente (ya que el motor no permite dicha estructura), se debe crear un \emph{dominio} con una regla de integridad que verifique si el valor del campo es efectivamente el \emph{OID} de un avión. Cabe destacar que previamente se tuvo que modificar la tabla \emph{avion} para que incorpore los \emph{OIDs}  
+
+\vspace*{5mm}
+\lstset{style=sql}
+\begin{lstlisting}
+aviones=# ALTER TABLE avion SET WITH OIDS;
+\end{lstlisting}
 
 Ahora bien, como el motor impone la restricción de no admitir subconsultas en las definiciones de las reglas de integridad, se debe crear una función que realice consulta. Dicha función debe devolver un \textbf{valor booleano}. 
 
@@ -170,9 +175,10 @@ UNION ALL
 \subsection{Aeropuertos por aerolíneas}
 \emph{Mostrar todos los aeropuertos que trabajan con la aerolinea X (elegir un valor de X de acuerdo a los datos existentes en la tabla aeropuertos) (uso del ANY)} 
 
+\emph{\textbf{El script de las consultas es \dq{consultas\_any\_all.sql}}} 
 \\~
 
-Tomando como nombre de aerolínea a "Aerolíneas Argentinas", que está cargado en por lo menos una tupla de la tabla, la consulta se podría escribir de la siguiente manera:
+Tomando como nombre de aerolínea a \dq{Aerolíneas Argentinas}, que está cargado en por lo menos una tupla de la tabla, la consulta se podría escribir de la siguiente manera:
 
 \vspace*{5mm}
 \lstset{style=sql}
@@ -206,6 +212,82 @@ Sin embargo la consulta anterior no cumpliría con la consigna debido a que se s
 \subsection{Aeropuertos con todos los hangares alquilados}
 
 \emph{Mostrar todos los aeropuertos de los cuales se tiene alquilados hangares y que estén ocupados todas las parcelas (uso del ALL) en la consulta deben aparecer los nros. de avion y descripción del modelo de avion que estén ocupando cada parcela.} 
+
+\\~
+
+La sintaxis del operador \emph{ALL} es idéntica a la del \emph{ANY}; evaluará a verdadero siempre y cuando la expresión indicada se cumpla para \emph{todos} los elementos del arreglo pasado a la función.   
+
+\vspace*{5mm}
+\lstset{style=sql}
+\begin{lstlisting}
+SELECT  nombre, 
+        oid_avion, 
+        descripcion 
+FROM    aeropuerto_hangares, 
+        UNNEST(espacios), 
+        avion, 
+        "modeloAvion" 
+WHERE true = ALL(SELECT esta_ocupado FROM UNNEST(espacios)) 
+    AND oid_avion=avion.oid 
+    AND avion."tipoModelo"="modeloAvion"."tipoModelo" 
+ORDER BY aeropuerto_hangares.ctid;
+\end{lstlisting}
+
+Debido a que la tabla \emph{aeropuerto} no tiene ninguna clave primaria, se utilizó el campo \emph{ctid} \footnote{Ubicación física de la fila en la tabla. El \emph{ctid} de una fila cambia cada vez que la fila es actualizada o movida por la operación \emph{VACUUM FULL} \cite{ctid}} (manejado internamente por el motor) para ordenar el resultado de la consulta. 
+
+
+\section{Relaciones anidadas}
+\emph{\textbf{El script de las consultas es \dq{consultas\_anidadas.sql}}} 
+
+\\~
+
+Silberschatz define el \textbf{modelo relacional anidado} como
+\begin{quote}\itshape
+    una extensión del modelo relacional en la que los dominios pueden ser atómicos o de relación. Por lo tanto, el valor de las tuplas de los atributos puede ser una relación, y las relaciones pueden guardarse en otras relaciones. \cite{silberschatz}
+\end{quote}
+
+Estas relaciones anidadas se pueden expresar en \textbf{Primera Forma Normal}, convirtiendo sus atributos complejos en atributos de dominios simples. Para ello se utiliza el \textbf{desanidamiento}.
+
+Por otra parte, también se puede expresar una relación en \textbf{1FN} como una relación anidada, utlizando el \textbf{anidamiento} (extensión de la agrupación en SQL \cite{silberschatz})  
+
+\subsection{Normalización}
+\emph{Escribir una consulta y documentar el resultado para mostrar en una tabla en 1ra Forma Normal el contenido de la tabla aeropuertosHangares. Verificar que las columnas tengan nombre significativo.} 
+
+\\~
+
+En \emph{Postgres}, el desanidamiento de una relación anidada se realiza con la función \textbf{unnest}. La consulta requerida se expresaría de la siguiente manera  
+
+\vspace*{5mm}
+\lstset{style=sql}
+\begin{lstlisting}
+SELECT  nombre AS "Aeropuerto", 
+        (parcelas).numero_parcela AS "Numero de parcela", 
+        CASE WHEN (parcelas).esta_ocupado=true THEN 
+            'Ocupado' 
+        ELSE 'Disponible' 
+        END AS "Esta ocupado?", 
+        (parcelas).oid_avion AS "Avion" 
+FROM aeropuerto_hangares, UNNEST(espacios) AS parcelas;
+\end{lstlisting}
+
+\subsection{Desnormalización de relaciones en forma normal}
+\emph{Escribir una consulta para mostrar los nombres de los trabajadores y un arreglo de todos los aviones que repararon mostrando nro de avion y descripcion del modelo, basandose en un JOIN entre las tablas avion, modeloAvion y trabajador.} 
+
+\\~
+
+El motor utilizado no implementa la función \textbf{nest} como tal, pero si provee de función que cumple con el mismo fin, \textbf{ARRAY\_AGG}. 
+
+\vspace*{5mm}
+\lstset{style=sql}
+\begin{lstlisting}
+SELECT  trim(nombre) AS "Trabajador", 
+        ARRAY_AGG(ROW(tr."nroAvion", trim(descripcion)))  AS "Aviones reparadas"
+FROM "trabajadorReparacion" AS tr 
+    JOIN trabajador AS t ON tr."dniTrabajador"=t.dni 
+    JOIN avion AS av ON tr."nroAvion"=av."nroAvion" 
+    JOIN "modeloAvion" AS ma ON av."tipoModelo"=ma."tipoModelo" 
+GROUP BY nombre ORDER BY nombre;
+\end{lstlisting}
 
 
 
