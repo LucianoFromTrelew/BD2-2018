@@ -292,8 +292,7 @@ Si ahora probamos de nuevo insertar con el usuario anterior
 \vspace*{5mm}
 \lstset{style=sql}
 \begin{lstlisting}
-aviones=> GRANT INSERT ON TABLE audit TO "userB";
-GRANT
+aviones=> INSERT INTO avion VALUES (1, 50, 1990, 2000);
 \end{lstlisting}
 
 Se puede ver en la tabla de auditoría que la tupla fue insertada exitosamente (con algún usuario que tenga permisos para ver los datos de la tabla \dq{audit})
