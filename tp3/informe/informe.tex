@@ -49,7 +49,7 @@ A continuación se describen la estructuras de \emph{t\_ubicacion} y de \emph{t\
 
 \subsubsection{\emph{t\_ubicacion}}
 
-Este tipo de dato representa la ubicación de un aeropuerto, así tendrá los campos \emph{ciudad} (50 caracteres), \emph{provincia} (también 50 caracteres), y \emph{pais} (30 caracteres). 
+Este tipo de dato representa la ubicación de un aeropuerto, así que tendrá los campos \emph{ciudad} (50 caracteres), \emph{provincia} (también 50 caracteres), y \emph{pais} (30 caracteres). 
 
 \subsubsection{\emph{t\_medidas}}
 
@@ -69,9 +69,11 @@ CREATE TABLE aeropuerto OF t_aeropuerto;
 
 \emph{Crear una tabla aeropuertos basada en el tipo creado en el punto 1. Hacer varios INSERT (y documentarlos) para poblar la tabla aeropuertos con datos} 
 
+~\\
+
 Para cargar datos en la tabla \emph{aeropuerto}, primero se consiguieron datos reales de aeropuertos y aerolíenas de \cite{datasets}; mediante un \emph{script} escrito en Python (disponible en el directorio \textbf{\emph{generar\_aeropuertos}}), se creó el \emph{script} de SQL correspondiente para realizar la carga (\textbf{\emph{script\_carga\_aeropuertos.sql}}).
 
-Cada aeropuerto cargado tiene un nombre de ciudad y un país (en el campo de \emph{provincia} se cargó el mismo nombre que el de la ciudad debido a la ausencia de tal dato en el \emph{dataset} de aeropuertos); un entero aleatorio entre 1000 y 5000 para la longitud; un entero aleatorio entre 10 y 500 para el ancho; un compuesto aleatorio (la lista de compuesto se puede encontrar en \cite{compuestos}); una cantidad aleatoria (entre 10 y 150) de aerolíneas que trabajan en el aeropuerto.
+Cada aeropuerto cargado tiene un nombre de ciudad y un país (en el campo de \emph{provincia} se indicó el mismo nombre que el de la ciudad debido a la ausencia de tal dato en el \emph{dataset} de aeropuertos); un entero aleatorio entre 1000 y 5000 para la longitud; un entero aleatorio entre 10 y 500 para el ancho; un compuesto aleatorio (la lista de compuesto se puede encontrar en \cite{compuestos}); una cantidad aleatoria (entre 10 y 150) de aerolíneas que trabajan en el aeropuerto.
 
 \vspace*{5mm}
 \lstset{style=sql}
@@ -92,7 +94,7 @@ aviones=# SELECT COUNT(*) FROM aeropuerto;
 ~\\
 
 
-Valiéndose de las características \emph{objeto-relacional} que incluye el motor \emph{Postrgres}, se puede definir una tabla como extensión de otra (hereda todos sus atributos).
+Valiéndose de las características objeto-relacional que incluye el motor \emph{Postrgres}, se puede definir una tabla como extensión de otra (hereda todos sus atributos).
 
 En este caso, no solamente se deben heredar todos los atributos de la tabla \emph{aeropuerto}, sino que también agregar otros nuevos (un campo para el precio del espacio y una colección de los espacios). 
 
@@ -126,7 +128,7 @@ aviones=# ALTER TABLE avion SET WITH OIDS;
 
 Ahora bien, como el motor impone la restricción de no admitir subconsultas en las definiciones de las reglas de integridad, se debe crear una función que realice consulta. Dicha función debe devolver un \textbf{valor booleano}. 
 
-\\~
+~\\
 
 Para probar la regla de integridad, se puede intentar insertar un registro que contenga en el campo \emph{oid\_avion} un valor que no se corresponda con el identificar de un avión. 
 
@@ -136,10 +138,10 @@ A continuación se muestra un ejemplo que intenta ingresar una tupla en \emph{ae
 \lstset{style=sql}
 \begin{lstlisting}
 aviones=# INSERT INTO aeropuerto_hangares VALUES (
-    'coso', 
-    ROW('coso', 'coso', 'coso'),
-    ROW(100, 100, 'coso'),
-    ARRAY['coso'],
+    'Un aeropuerto', 
+    ROW('Una ciudad', 'Una provincia', 'Un pais'),
+    ROW(100, 100, 'Un compuesto'),
+    ARRAY['Una aerolinea'],
     100,
     ARRAY[CAST(ROW(15, false, 10) AS t_espacio)]
 );
@@ -213,9 +215,11 @@ Sin embargo la consulta anterior no cumpliría con la consigna debido a que se s
 
 \emph{Mostrar todos los aeropuertos de los cuales se tiene alquilados hangares y que estén ocupados todas las parcelas (uso del ALL) en la consulta deben aparecer los nros. de avion y descripción del modelo de avion que estén ocupando cada parcela.} 
 
-\\~
+~\\
 
 La sintaxis del operador \emph{ALL} es idéntica a la del \emph{ANY}; evaluará a verdadero siempre y cuando la expresión indicada se cumpla para \emph{todos} los elementos del arreglo pasado a la función.   
+
+\clearpage
 
 \vspace*{5mm}
 \lstset{style=sql}
@@ -239,21 +243,23 @@ Debido a que la tabla \emph{aeropuerto} no tiene ninguna clave primaria, se util
 \section{Relaciones anidadas}
 \emph{\textbf{El script de las consultas es \dq{consultas\_anidadas.sql}}} 
 
-\\~
+~\\
 
 Silberschatz define el \textbf{modelo relacional anidado} como
 \begin{quote}\itshape
     (El modelo relacional anidado) es una extensión del modelo relacional en la que los dominios pueden ser atómicos o de relación. Por lo tanto, el valor de las tuplas de los atributos puede ser una relación, y las relaciones pueden guardarse en otras relaciones. \cite{silberschatz}
 \end{quote}
 
-Estas relaciones anidadas se pueden expresar en \textbf{Primera Forma Normal}, convirtiendo sus atributos complejos en atributos de dominios simples. Para ello se utiliza el \textbf{desanidamiento}.
+Esta extensión al sistema relacional permite crear un modelo tabular que sea más natural y cercano a la realidad, permitiendo tener tipos estructurados en una tupla o colecciones.
 
-Por otra parte, también se puede expresar una relación en \textbf{1FN} como una relación anidada, utlizando el \textbf{anidamiento} (extensión de la agrupación en SQL \cite{silberschatz})  
+No obstante, las relaciones anidadas se pueden expresar en \textbf{Primera Forma Normal}, convirtiendo sus atributos complejos en atributos de dominios simples. Los tipos estructurados sencillamente se pueden pasar a \textbf{1FN} desmembrándolos en la consulta y mostrar cada uno de sus campos. Para el caso de las colecciones, se utiliza el \textbf{desanidamiento}, que transforma un arreglo en una serie de filas.
+
+Por otra parte, también se puede expresar una relación en \textbf{1FN} como una relación anidada, utilizando el \textbf{anidamiento} (extensión de la agrupación en SQL \cite{silberschatz}); transorma un conjunto de filas (agrupadas por un criterio, con la claúsula \emph{GROUP BY}) en un arreglo.
 
 \subsection{Normalización}
 \emph{Escribir una consulta y documentar el resultado para mostrar en una tabla en 1ra Forma Normal el contenido de la tabla aeropuertosHangares. Verificar que las columnas tengan nombre significativo.} 
 
-\\~
+~\\
 
 En \emph{Postgres}, el desanidamiento de una relación anidada se realiza con la función \textbf{unnest}. La consulta requerida se expresaría de la siguiente manera  
 
@@ -273,9 +279,11 @@ FROM aeropuerto_hangares, UNNEST(espacios) AS parcelas;
 \subsection{Desnormalización de relaciones en forma normal}
 \emph{Escribir una consulta para mostrar los nombres de los trabajadores y un arreglo de todos los aviones que repararon mostrando nro de avion y descripcion del modelo, basandose en un JOIN entre las tablas avion, modeloAvion y trabajador.} 
 
-\\~
+~\\
 
 El motor utilizado no implementa la función \textbf{nest} como tal, pero si provee de función que cumple con el mismo fin, \textbf{ARRAY\_AGG}. 
+
+\clearpage   
 
 \vspace*{5mm}
 \lstset{style=sql}
@@ -305,7 +313,7 @@ Así como en el paradigma OO, los objetos en un \emph{OODB} cuentan con
 
 Cabe agregar que en \cite{silberschatz} no se habla de sistemas \emph{OODB}, sino de \emph{lenguajes de programación presistentes}, definiéndolos como \emph{lenguajes de programación extendidos con constructores para el tratamiento de datos persistentes}.
 
-\\~
+~\\
 
 Por otro lado, los sistemas \emph{RDB} extendidos son sistemas de bases de datos relacionales con características de los sistemas \emph{OODB} agregadas. Si bien estas incorporaciones facilitan el modelado de ciertas estructuras de datos (logrando un modelo más natural), eventualmente \dq{desnormalizan} las relaciones.
 
