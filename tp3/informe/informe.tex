@@ -243,7 +243,7 @@ Debido a que la tabla \emph{aeropuerto} no tiene ninguna clave primaria, se util
 
 Silberschatz define el \textbf{modelo relacional anidado} como
 \begin{quote}\itshape
-    una extensión del modelo relacional en la que los dominios pueden ser atómicos o de relación. Por lo tanto, el valor de las tuplas de los atributos puede ser una relación, y las relaciones pueden guardarse en otras relaciones. \cite{silberschatz}
+    (El modelo relacional anidado) es una extensión del modelo relacional en la que los dominios pueden ser atómicos o de relación. Por lo tanto, el valor de las tuplas de los atributos puede ser una relación, y las relaciones pueden guardarse en otras relaciones. \cite{silberschatz}
 \end{quote}
 
 Estas relaciones anidadas se pueden expresar en \textbf{Primera Forma Normal}, convirtiendo sus atributos complejos en atributos de dominios simples. Para ello se utiliza el \textbf{desanidamiento}.
@@ -291,7 +291,41 @@ GROUP BY nombre ORDER BY nombre;
 
 
 
-\section{Comparación entre \emph{ODB} y \emph{RDB}}
+\section{Comparación entre \emph{OODB} y \emph{RDB} extendidos}
+
+La principal diferencia entre los dos sistemas de bases de datos se presenta justamente en el nombre; los \emph{OODB} manejan los registros  como \emph{objetos}, agregando también la gran mayoría de las características del paradigma orientado a objetos (herencia, comportamiento de los objetos, interfaces). Nótese que con \emph{registros} se hace referencia a las \dq{tuplas} de la tabla, ya que estos sistemas también implementan \textbf{valores} para representar a los tipos de datos básicos (como enteros, cadenas, o valores booleanos) para no generar una cantidad excesiva de \emph{OIDs} \cite{elmasri}.
+
+Así como en el paradigma OO, los objetos en un \emph{OODB} cuentan con
+\begin{itemize}
+    \item identidad (implementado mediante el \emph{OID});
+    \item comportamiento (a través de métodos);
+    \item estado (compuesto por el conjunto de valores de sus atributos y vínculos con otros objetos);
+    \item contructor
+\end{itemize}
+
+Cabe agregar que en \cite{silberschatz} no se habla de sistemas \emph{OODB}, sino de \emph{lenguajes de programación presistentes}, definiéndolos como \emph{lenguajes de programación extendidos con constructores para el tratamiento de datos persistentes}.
+
+\\~
+
+Por otro lado, los sistemas \emph{RDB} extendidos son sistemas de bases de datos relacionales con características de los sistemas \emph{OODB} agregadas. Si bien estas incorporaciones facilitan el modelado de ciertas estructuras de datos (logrando un modelo más natural), eventualmente \dq{desnormalizan} las relaciones.
+
+Algunas de las características que añaden son:
+
+\begin{itemize}
+    \item Tipos complejos
+        \begin{itemize}
+            \item tipos colección;
+            \item tipos estructurados
+        \end{itemize}
+    \item Identificadores de objetos \emph{OIDs} 
+    \item Herencia
+        \begin{itemize}
+            \item de tipos;
+            \item de tablas
+        \end{itemize}
+    \item Tipos \emph{referencia} 
+\end{itemize}
+
 
 
 
