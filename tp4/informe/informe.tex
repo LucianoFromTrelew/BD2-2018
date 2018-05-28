@@ -29,8 +29,50 @@
 
 \section{coso}
 \subsection{otrrra más}
+\emph{Estudie las formas de implementar Alta Disponibilidad, Balanceo de carga y replicación en postgres (capitulo 25 de la ayuda), escriba un resumen y un cuadro explicativo de cada alternativa planteada en la documentación, detallando el software que se debe utilizar para implementarlo.} 
 
-hola que haces \autocite{elmasri} \autocite{pattern}
+~\\
+
+El motor de bases de datos \emph{PostgreSQL} detalla en su documentación distintas formas posibles de implementar los conceptos de \textbf{Alta disponibilidad}, \textbf{Balanceo de carga}, y \textbf{Replicación}. Antes de detallar brevemente cada uno, se definen los conceptos de
+\begin{itemize}
+    \item \textbf{Alta disponibilidad}: propiedad de las \emph{Bases de Datos Distribuidas} (\emph{BDD}) que permite tener acceso a una relación \emph{r} cuando uno de los sitios que contenga dicha relación falle \autocite{silberschatz}. También se puede definir como la probabilidad de que el sistema esté accesible durante un periodo de tiempo \autocite{elmasri}.
+    \item \textbf{Balanceo de carga}: propiedad que permite que varios servidores provean los mismos datos \autocite{high-availability}
+    \item \textbf{Replicación}: mantener copias idénticas de la relación almacenadas en distintos sitios que conforman la \emph{BDD} \autocite{silberschatz} 
+\end{itemize}
+
+Hace falta agregar también que en la gran mayoría de las soluciones propuestas por el motor se habla de una arquitectura de \emph{BDD} de tipo \emph{maestro-esclavo}, donde existe un único servidor que es el que escribe en la base de datos (maestro ó primario), y otros que solamente llevan registro de los cambios (esclavos o \emph{en espera}); se subdividen los servidores esclavos en \dq{servidores tibios} (\emph{warm}) y \dq{servidores calientes} (\emph{hot}). A los primeros solamente se puede conectar cuando se cae el servidor principal, y toman su puesto, mientras que a los segundos siempre se puede conectar, para realizar consultas de solo lectura.
+
+Las distintas soluciones que presenta \emph{Postgres} en su documentación son las siguientes:
+\begin{enumerate}
+    \item Tolerancia a fallos por disco compartido (\emph{Shared Disk Failover}): se mantiene una única copia de la base de datos que es accedida por múltiples servidores. Si el servidor principal falla, el servidor esclavo puede realizar una recuperación como si se tratase de una caída del sistema.
+
+    \item Replicación del sistema de archivos (\emph{File System Replication}): todos los cambios realizados al sistema de archivos de la base de datos son duplicados en otro sistema de archivos ubicado en otra máquina. La copia debe garantizar la consistencia de los datos entre ambas versiones.
+
+    \item Envío de la bitácora de transacciones (\emph{Transaction Log Shipping}): los servidores esclavos se pueden mantener actualizados enviándoles registros de la bitácora de lectura adelantada. Si el servidor principal se cae, los esclavos pueden tomar su puesto rápidamente ya que tienen casi toda la información.
+
+    \item Replicación \emph{maestro-esclavo} basado en \emph{triggers} (\emph{Trigger-Based Master-Standby Replication}): las consultas de modificación son enviadas al servidor maestro, para que este asíncronamente envíe los cambios a los esclavos (que solamente pueden realizar consultas de lectura). Este tipo de replicación se puede implementar con el módulo \textbf{Slony-I}. 
+
+    \item \emph{Middleware} de replicación basado en sentencias (\emph{Statement-Based Replication Middleware}): se intercepta cada sentencia SQL y se la envía a cada uno de los servidores que componen la \emph{BDD} (cada uno opera independientemente). Las cosultas de escritura son enviadas a todos los servidores, así se mantienen actualizados, mientras que las de lecturas pueden ser enviadas a uno solo (se balancea el trabajo de lectura). Se puede implementar con \textbf{Pgpool-II} y con \textbf{Continuent Tungsten}  
+
+    \item Replicación asíncrona de múltiples maestros (\emph{Asynchronous Multimaster Replication}): cada servidor trabaja independientemente del resto, y periódicamente se comunican entre sí para identificar transacciones que entran en conflicto. Estos conflictos pueden ser resueltos por el usuario o establecer de antemano ciertas reglas de resolución. Puede ser implementado con el módulo \textbf{Bucardo} 
+
+    \item Replicación síncrona de múltiples maestros (\emph{Synchronous Multimaster Replication}): cualquier servidor puede aceptar consultas de escritura, y los cambios son transmitidos desde el servidor que realizó la actulización hacia el resto \emph{antes de que finalice la transacción}. Consultas de lectura pueden ser ejecutadas por cualquier servidor. El motor no provee este tipo de replicación, pero puede ser implementado mediante el \emph{protocolo de compromiso en dos fases}.
+\end{enumerate}
+
+\begin{center}
+    \begin{tabular}{| p{5cm} | c | p{5cm} | p{4cm} |}
+        \hline
+        \textbf{Solución} & ¿Asíncrono? & Cuello de botella & Software adicional \\ \hline
+        \textbf{Tolerancia a fallos por disco compartido} & \xmark & Fallos del disco & -\\ \hline
+        \textbf{Replicación del sistema de archivos} & \xmark & Integridad de la copia & -\\ \hline
+        \textbf{Envío de la bitácora de transacciones} & Ambas & Velocidad de la red &\\ \hline
+        \textbf{Replicación \emph{maestro-esclavo} basado en \emph{triggers}} & \cmark & Velocidad de la red & Slony-I\\ \hline
+        \textbf{\emph{Middleware} de replicación basado en sentencias} & \cmark & Sincronización entre servidores & Pgpool-II, Continuent Tungsten\\ \hline
+        \textbf{Replicación asíncrona de múltiples maestros} & \cmark & Sincronización entre servidores y resolución de conflictos & Bucardo\\ \hline
+        \textbf{Replicación síncrona de múltiples maestros} & \xmark & Sincronización entre servidores & -\\ \hline
+    \end{tabular}
+\end{center}
+
 
 
 
