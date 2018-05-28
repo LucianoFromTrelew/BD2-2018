@@ -1,12 +1,12 @@
 /*
-    Los siguientes fragmentos serían asignados al sitio de Trelew
+    Los siguientes fragmentos serían asignados al sitio de Puerto Madryn
  */
 
 -- Localidad de Trelew
 SELECT *
 FROM localidad
 WHERE "nombreLocalidad"
-    ILIKE '%trelew%';
+    ILIKE '%madryn%';
 
 -- Pilotos de Trelew
 SELECT * 
@@ -17,7 +17,7 @@ WHERE "dniPiloto" IN (
     WHERE t."idLocalidad" = (
         SELECT "idLocalidad" 
         FROM localidad 
-        WHERE "nombreLocalidad" ILIKE '%trelew%'
+        WHERE "nombreLocalidad" ILIKE '%madryn%'
     )
 );
 
@@ -27,7 +27,7 @@ FROM trabajador AS t
 WHERE t."idLocalidad" = (
     SELECT "idLocalidad" 
     FROM localidad 
-    WHERE "nombreLocalidad" ILIKE '%trelew%'
+    WHERE "nombreLocalidad" ILIKE '%madryn%'
 );
 
 -- Relación entre piloto y avión de los pilotos de Trelew
@@ -39,7 +39,7 @@ WHERE pa."dniPiloto" IN (
     WHERE t."idLocalidad" = (
         SELECT "idLocalidad" 
         FROM localidad 
-        WHERE "nombreLocalidad" ILIKE '%trelew%'
+        WHERE "nombreLocalidad" ILIKE '%madryn%'
     )
 );
 
@@ -55,7 +55,7 @@ WHERE "nroAvion" in (
         WHERE t."idLocalidad" = (
             SELECT "idLocalidad" 
             FROM localidad 
-            WHERE "nombreLocalidad" ILIKE '%trelew%'
+            WHERE "nombreLocalidad" ILIKE '%madryn%'
         )
     )
 );
@@ -75,7 +75,7 @@ WHERE "tipoModelo" IN (
             WHERE t."idLocalidad" = (
                 SELECT "idLocalidad" 
                 FROM localidad 
-                WHERE "nombreLocalidad" ILIKE '%trelew%'
+                WHERE "nombreLocalidad" ILIKE '%madryn%'
             )
         )
     )
