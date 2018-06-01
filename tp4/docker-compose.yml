@@ -3,14 +3,20 @@ services:
   alumnos:
     image: "postgres:9.6"
     container_name: "sitio-alumnos"
+    volumes:
+      - "$HOME/.local/universidad-volume/alumnos:/volume"
     environment:
       - POSTGRES_PASSWORD=admin
       - POSTGRES_USER=admin
       - POSTGRES_DB=universidad
+      - PGDATA=/volume/data
   cursos:
     image: "postgres:9.6"
     container_name: "sitio-cursos"
+    volumes:
+      - "$HOME/.local/universidad-volume/cursos:/volume"
     environment:
       - POSTGRES_PASSWORD=admin
       - POSTGRES_USER=admin
       - POSTGRES_DB=universidad
+      - PGDATA=/volume/data
