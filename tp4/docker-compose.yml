@@ -1,0 +1,16 @@
+version: '3'
+services:
+  alumnos:
+    image: "postgres:9.6"
+    container_name: "sitio-alumnos"
+    environment:
+      - POSTGRES_PASSWORD=admin
+      - POSTGRES_USER=admin
+      - POSTGRES_DB=universidad
+  cursos:
+    image: "postgres:9.6"
+    container_name: "sitio-cursos"
+    environment:
+      - POSTGRES_PASSWORD=admin
+      - POSTGRES_USER=admin
+      - POSTGRES_DB=universidad
