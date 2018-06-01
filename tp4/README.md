@@ -1,7 +1,27 @@
 Levantar los contenedores con:
 
 ```bash
-bashdocker-compose -p <NOMBRE_PROYECTO> up -d
+./run-compose.sh
+```
+
+O bien con
+
+```bash
+docker-compose -p <NOMBRE_PROYECTO> up -d
 ```
 
 El nombre del proyecto utilizado es **universidad**
+
+---
+
+Para eliminarlos:
+
+```bash
+./stop-compose.sh
+```
+
+O bien con
+
+```bash
+docker-compose -p <NOMBRE_PROYECTO> down
+```
