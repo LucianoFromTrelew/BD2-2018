@@ -1,0 +1,27 @@
+SELECT dblink_connect('conn_cursos', 'hostaddr=172.20.0.3 user=admin password=admin dbname=universidad');
+
+SELECT dblink_exec('conn_cursos', 'INSERT INTO cursos VALUES (1, ''Sistemas Disitribuidos'', 5, 5)');
+SELECT dblink_exec('conn_cursos', 'INSERT INTO cursos VALUES (2,''Fundamentos de la Informatica'',14,10)');
+SELECT dblink_exec('conn_cursos', 'INSERT INTO cursos VALUES (3,''Administracion de Redes y Seguridad'',16,7)');
+SELECT dblink_exec('conn_cursos', 'INSERT INTO cursos VALUES (4,''Bases de Datos II'',16,10)');
+SELECT dblink_exec('conn_cursos', 'INSERT INTO cursos VALUES (6,''Expresion de problemas y algoritmos'',14,5)');
+SELECT dblink_exec('conn_cursos', 'INSERT INTO cursos VALUES (7,''Programacion Orientada a Objetos'',4,4)');
+SELECT dblink_exec('conn_cursos', 'INSERT INTO cursos VALUES (8,''Algebra'',15,3)');
+SELECT dblink_exec('conn_cursos', 'INSERT INTO cursos VALUES (9,''Introduccion a la concurrencia'',1,2)');
+SELECT dblink_exec('conn_cursos', 'INSERT INTO cursos VALUES (10,''Logica y matematica discrea'',17,5)');
+SELECT dblink_exec('conn_cursos', 'INSERT INTO cursos VALUES (12,''Algoritmica y Programacion II'',1,5)');
+SELECT dblink_exec('conn_cursos', 'INSERT INTO cursos VALUES (13,''Sistemas Operativos'',6,4)');
+SELECT dblink_exec('conn_cursos', 'INSERT INTO cursos VALUES (15,''Bases de Datos I'',19,4)');
+SELECT dblink_exec('conn_cursos', 'INSERT INTO cursos VALUES (17,''Estadistica'',17,3)');
+SELECT dblink_exec('conn_cursos', 'INSERT INTO cursos VALUES (20,''Redes y Transmision de Datos'',3,9)');
+SELECT dblink_exec('conn_cursos', 'INSERT INTO cursos VALUES (24,''Laboratorio de Programacion y Lenguajes'',7,1)');
+SELECT dblink_exec('conn_cursos', 'INSERT INTO cursos VALUES (25,''Paradigmas de Lenguajes y Programacion'',16,6)');
+SELECT dblink_exec('conn_cursos', 'INSERT INTO cursos VALUES (26,''Sistemas y Organizaciones'',4,5)');
+SELECT dblink_exec('conn_cursos', 'INSERT INTO cursos VALUES (30,''Elementos de informatica'',1,10)');
+SELECT dblink_exec('conn_cursos', 'INSERT INTO cursos VALUES (42,''Aspectos Legales y Profesionales'',20,5)');
+SELECT dblink_exec('conn_cursos', 'INSERT INTO cursos VALUES (44,''Arquitectura de Computadoras'',19,7)');
+SELECT dblink_exec('conn_cursos', 'INSERT INTO cursos VALUES (72,''Analisis matematico'',2,9)');
+SELECT dblink_exec('conn_cursos', 'INSERT INTO cursos VALUES (80,''Desarrollo de Software'',4,3)');
+SELECT dblink_exec('conn_cursos', 'INSERT INTO cursos VALUES (82,''Ingenieria de Software I'',9,3)');
+SELECT dblink_exec('conn_cursos', 'INSERT INTO cursos VALUES (87,''Ingenieria de Software II'',16,9)');
+SELECT dblink_exec('conn_cursos', 'INSERT INTO cursos VALUES (95,''Ingenieria de Software III'',1,3)');
