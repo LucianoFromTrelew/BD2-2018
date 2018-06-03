@@ -2,20 +2,26 @@
     Los siguientes fragmentos serían asignados al sitio que tiene todos los pilotos
  */
 
--- Todas las localidades 
+-- Descripción: Todas las localidades 
+-- Nombre de fragmento: localidad_todos
 SELECT * FROM localidad;
 
--- Todos los pilotos
+-- Descripción: Todos los pilotos
+-- Nombre de fragmento: piloto_todos
 SELECT * FROM piloto;
 
--- Todos los trabajadores
+-- Descripción: Todos los trabajadores
+-- Nombre de fragmento: trabajador_todos
 SELECT * FROM trabajador;
 
--- Relación entre piloto y avión de todos los pilotos
+-- Descripción: Relación entre piloto y avión de todos los pilotos
+-- Nombre de fragmento: piloto_avion_todos
 SELECT * FROM "pilotoAvion"; 
 
--- Todos los aviones
+-- Descripción: Todos los aviones
+-- Nombre de fragmento: avion_todos
 SELECT * FROM avion;
 
--- Todos los modelos de avión
+-- Descripción: Todos los modelos de avión
+-- Nombre de fragmento: modelo_avion_todos
 SELECT * FROM "modeloAvion";

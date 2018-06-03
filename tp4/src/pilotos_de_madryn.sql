@@ -2,13 +2,15 @@
     Los siguientes fragmentos serían asignados al sitio de Puerto Madryn
  */
 
--- Localidad de Trelew
+-- Descripción: Localidad de Madryn
+-- Nombre de fragmento: localidad_madryn
 SELECT *
 FROM localidad
 WHERE "nombreLocalidad"
     ILIKE '%madryn%';
 
--- Pilotos de Trelew
+-- Descripción: Pilotos de Madryn
+-- Nombre de fragmento: piloto_madryn
 SELECT * 
 FROM piloto 
 WHERE "dniPiloto" IN (
@@ -21,7 +23,8 @@ WHERE "dniPiloto" IN (
     )
 );
 
--- Trabajadores de Trelew
+-- Descripción: Trabajadores de Madryn
+-- Nombre de fragmento: trabajador_madryn
 SELECT * 
 FROM trabajador AS t
 WHERE t."idLocalidad" = (
@@ -30,7 +33,8 @@ WHERE t."idLocalidad" = (
     WHERE "nombreLocalidad" ILIKE '%madryn%'
 );
 
--- Relación entre piloto y avión de los pilotos de Trelew
+-- Descripción: Relación entre piloto y avión de los pilotos de Madryn
+-- Nombre de fragmento: piloto_avion_madryn
 SELECT *
 FROM "pilotoAvion" AS pa
 WHERE pa."dniPiloto" IN (
@@ -43,7 +47,8 @@ WHERE pa."dniPiloto" IN (
     )
 );
 
--- Aviones piloteados por pilotos de Trelew
+-- Descripción: Aviones piloteados por pilotos de Madryn
+-- Nombre de fragmento: avion_madryn
 SELECT *
 FROM avion
 WHERE "nroAvion" in (
@@ -60,7 +65,8 @@ WHERE "nroAvion" in (
     )
 );
 
--- Modelos de aviones piloteados por pilotos de Trelew
+-- Descripción: Modelos de aviones piloteados por pilotos de Madryn
+-- Nombre de fragmento: modelo_avion_madryn
 SELECT *
 FROM "modeloAvion"
 WHERE "tipoModelo" IN (
