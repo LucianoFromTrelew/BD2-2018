@@ -26,6 +26,8 @@
 %Your abstract.
 %\end{abstract}
 
+\lstset{style=sql}
+
 
 \section{Alta Disponibilidad, Balanceo de Carga, y Réplica}
 \emph{Estudie las formas de implementar Alta Disponibilidad, Balanceo de carga y replicación en postgres (capitulo 26 de la ayuda), escriba un resumen y un cuadro explicativo de cada alternativa planteada en la documentación, detallando el software que se debe utilizar para implementarlo.} 
@@ -72,6 +74,10 @@ Las distintas soluciones que presenta \emph{Postgres} en su documentación son l
     \end{tabular}
 \end{center}
 
+\subsection{Replicación en \emph{PostgreSQL}: slony-I}
+acá poner lo de slony
+
+
 \section{Fragmentos de la base \emph{aviones}}
 \emph{Sobre la base de datos de aviones, crear fragmentos para los pilotos de Trelew, pilotos de Madryn, y todos los pilotos. Hacer esquema de fragmentación y de asignación} 
 
@@ -94,6 +100,135 @@ La definición de cada fragmento se puede encontrar en los archivos \textbf{\emp
     \caption{\label{tab:table-name}Esquema de asignación}
     \end{table}
 \end{center}
+
+
+\section{Bases de Datos Distribuidas con \emph{dblink}}
+
+\subsection{Introducción}
+acá iría el punto 4
+
+\subsection{Implementación}
+\emph{Con el módulo dbLink de Postgres establecer una conexión entre dos servidores posibles; en el servidor local crear las tablas \dq{alumnos} e \dq{inscriptos}, en el remoto crear la tabla \dq{cursos}} 
+
+~\\
+
+Para la implementación de la base de datos distribuidas, se optó por crear dos \emph{servicios} mediante contenedores de \docker{}. Cada uno corre una servidor de \emph{PostgreSQL 9.6} con un usuario con privilegios de superusuario. La definición y el manejo de estos servicios se llevó a cabo utilizando \doccom{} \footnote{Para ver cómo están definidos, referirse al archivo \emph{docker-compose.yml} y al archivo \emph{README.md}}.
+
+El servicio nombrado \dq{sitio-alumnos} hará de servidor local, mientras que \dq{sitio-cursos} será el remoto.
+
+Cada servicio se crea con los siguientes parámetros:
+\begin{itemize}
+    \item Usuario: \emph{admin} 
+    \item Contraseña: \emph{admin} 
+    \item Nombre de la base de datos: \emph{universidad} 
+\end{itemize}
+
+\subsubsection{Creación de las tablas}
+
+Para crear las tablas en el servidor local y el remoto, se ejecutó el siguiente script en el sitio de alumnos
+
+\vspace*{5mm}
+\begin{lstlisting}[title=Definición de las tablas (el script SQL es \emph{crear\_tablas\_locales\_remotas.sql})]
+CREATE TABLE alumnos (
+    dni integer PRIMARY KEY,
+    nombre varchar(50)
+);
+
+-- Conectar al servidor 172.20.0.20 (servidor remoto, sitio con los cursos) con las credenciales admin:admin
+SELECT dblink_connect('conn_cursos', 'hostaddr=172.20.0.20 dbname=universidad user=admin password=admin');
+
+-- Utilizar la conexión creada anteriormente para ejecutar una consulta remota
+SELECT dblink_exec('conn_cursos', 'CREATE TABLE cursos (id_curso integer PRIMARY KEY, nombre varchar(50), id_profesor integer, departamento integer)');
+
+CREATE TABLE inscriptos (
+    dni_alumno integer REFERENCES alumnos (dni),
+    id_curso integer,
+    anio integer,
+    nota integer,
+    PRIMARY KEY (dni_alumno, id_curso, anio)
+);
+
+-- Cerrar la conexión con la BD remota
+SELECT dblink_disconnect('conn_cursos');
+\end{lstlisting}
+
+\subsubsection{Carga de datos}
+
+Los scripts generados para la carga de datos fueron creados utilizando el sitio \autocite{data}. Debido la extensión de los scripts no se mostrarán en este informe, pero están disponibles en el directorio \emph{cargas/}, cada uno con un nombre representativo según su tabla.
+
+Para la tabla \emph{inscriptos}, se cargaron datos que pueden existir en la tabla \emph{cursos}, y otros que no (según se pedía en el enunciado).  
+
+\subsection{Consultas}
+
+Ya poblada las tablas que componen la base de datos distribuidas, se pueden ejecutar consultas con datos locales y datos remotos utilizando el módulo \emph{dblink}. 
+
+\subsubsection{Cursos con inscriptos}
+
+
+\vspace*{5mm}
+\begin{lstlisting}[title=Cursos con algún inscripto (el script es \emph{cursos\_con\_inscriptos.sql})]
+SELECT dblink_connect('conn_cursos', 'hostaddr=172.20.0.20 user=admin password=admin dbname=universidad');
+
+SELECT 
+    distinct nombre 
+FROM 
+    dblink('conn_cursos', 'SELECT id_curso, nombre FROM cursos') 
+    AS t(id_curso integer, nombre text)
+JOIN inscriptos AS ins 
+    ON t.id_curso=ins.id_curso;
+
+SELECT dblink_disconnect('conn_cursos');
+\end{lstlisting}
+
+En la consulta anterior, se muestran una única vez los nombres de los cursos (desde el servidor remoto) que tengan al menos un inscripto registrado (en e servidor local).
+
+
+\subsubsection{Alumnos recursantes}
+
+\vspace*{5mm}
+\begin{lstlisting}[title=Alumnos que cursaron más de una vez una materia (el script es \emph{recursantes.sql})]
+-- Alumnos recursantes
+
+SELECT dblink_connect('conn_cursos', 'hostaddr=172.20.0.20 user=admin password=admin dbname=universidad');
+
+SELECT 
+    al.nombre AS "Alumno",
+    ins.dni_alumno AS "DNI", 
+    cur.nombre AS "Curso",
+    COUNT(ins.id_curso) AS "Cuántas veces" 
+FROM inscriptos AS ins
+JOIN alumnos AS al
+    ON ins.dni_alumno = al.dni
+JOIN (SELECT * FROM dblink('conn_cursos', 'SELECT id_curso, nombre FROM cursos') AS t(id_curso integer, nombre text)) AS cur
+    ON ins.id_curso=cur.id_curso
+GROUP BY 
+    al.nombre,
+    ins.dni_alumno,
+    cur.nombre
+HAVING COUNT(ins.id_curso) > 1 
+ORDER BY al.nombre;
+
+SELECT dblink_disconnect('conn_cursos');
+\end{lstlisting}
+
+Los alumnos recursantes estarán registrados varias veces con un mismo curso en la tabla local \emph{inscriptos}. 
+
+\subsubsection{Verificar la existencia de los cursos en la tabla \emph{inscriptos}}
+
+Para recorrer la tabla de inscripciones y verificar si cada curso registrado existe en la tabla remota \emph{cursos}, se creó una función \emph{verificar\_curso\_inscripto()} que itera sobre la tabla (valiéndose de la posibilidad que provee \emph{Pl/PgSql} para iterar sobre el resultado de una consulta en un ciclo \emph{FOR}) y consulta en la tabla remota si existe ese curso. Debido a la extensión de la función, no se presentará en este informe, pero se la puede encontrar en el archivo \textbf{\emph{verificar\_curso\_inscripto.sql}}
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
