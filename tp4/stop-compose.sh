@@ -1,5 +1,5 @@
 #!/bin/bash
 
-PROJECT_NAME=universidad
+PROJECT_NAME=bdd
 
 docker-compose -p $PROJECT_NAME stop
