@@ -1,4 +1,4 @@
-SELECT dblink_connect('conn_cursos', 'hostaddr=172.20.0.3 user=admin password=admin dbname=universidad');
+SELECT dblink_connect('conn_cursos', 'hostaddr=172.20.0.20 user=admin password=admin dbname=universidad');
 
 SELECT dblink_exec('conn_cursos', 'INSERT INTO cursos VALUES (1, ''Sistemas Disitribuidos'', 5, 5)');
 SELECT dblink_exec('conn_cursos', 'INSERT INTO cursos VALUES (2,''Fundamentos de la Informatica'',14,10)');

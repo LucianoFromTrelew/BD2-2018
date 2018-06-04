@@ -3,7 +3,7 @@ CREATE TABLE alumnos (
     nombre varchar(50)
 );
 
-SELECT dblink_connect('conn_cursos', 'hostaddr=172.20.0.3 dbname=universidad user=admin password=admin');
+SELECT dblink_connect('conn_cursos', 'hostaddr=172.20.0.20 dbname=universidad user=admin password=admin');
 
 SELECT dblink_exec('conn_cursos', 'CREATE TABLE cursos (id_curso integer PRIMARY KEY, nombre varchar(50), id_profesor integer, departamento integer)');
 
@@ -14,3 +14,5 @@ CREATE TABLE inscriptos (
     nota integer,
     PRIMARY KEY (dni_alumno, id_curso, anio)
 );
+
+SELECT dblink_disconnect('conn_cursos');

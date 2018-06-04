@@ -11,7 +11,7 @@ DECLARE
     curso RECORD;
 BEGIN
     --Conectar a la BD remota
-    PERFORM dblink_connect('conn_cursos', 'hostaddr=172.20.0.3 user=admin password=admin dbname=universidad');
+    PERFORM dblink_connect('conn_cursos', 'hostaddr=172.20.0.20 user=admin password=admin dbname=universidad');
 
     -- Iterar sobre cada inscripción registrada
     FOR inscripcion IN SELECT * FROM inscriptos LOOP
