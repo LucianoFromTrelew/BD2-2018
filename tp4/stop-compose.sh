@@ -2,4 +2,4 @@
 
 PROJECT_NAME=universidad
 
-docker-compose -p $PROJECT_NAME down
+docker-compose -p $PROJECT_NAME stop
