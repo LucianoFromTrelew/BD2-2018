@@ -74,8 +74,25 @@ Las distintas soluciones que presenta \emph{Postgres} en su documentación son l
     \end{tabular}
 \end{center}
 
-\subsection{Replicación en \emph{PostgreSQL}: slony-I}
-acá poner lo de slony
+\subsection{Replicación en \emph{PostgreSQL}: \emph{Slony-I}}
+\textbf{Slony-I} es un módulo para \emph{PostgreSQL} que implementa \emph{un sistema de replicación \dq{maestro con múltiples esclavos}} \autocite{slony}. Soporta \textbf{réplica en cascada} (un nodo sirve a otro nodo), y es tolerante a fallos. 
+
+Algunos conceptos que maneja el módulo son:
+\begin{itemize}
+    \item \textbf{Cluster}: conjunto de instancias de bases de datos involucradas en la replicación.
+    \item \textbf{Nodo}: integrantes del cluster.
+    \item \textbf{Conjunto de réplica}: conjunto de objetos de la base de datos a ser replicados; pueden haber varios en un cluster.
+    \item \textbf{Origen}: nodo principal (maestro); es el único en el que se puede escribir.
+    \item \textbf{Suscriptores}: nodos esclavos; reciben datos de la réplica.
+    \item \textbf{Proveedor}: nodo esclavo que provee de datos a los otros nodos esclavos (actúa como un nodo maestro pero no se permite ninguna escritura en él).
+\end{itemize}
+
+La versión 9.0 de \emph{PostgreSQL} incorpora \emph{replicación por flujos}, sin embargo hay ciertos casos de uso donde se necesitaría una herramiento como \emph{Slony-I} ya que las técnicas nativas del motor no alcanzan \autocite{infoslony}:
+\begin{enumerate}
+    \item Interactuar con distintas versiones de \emph{Postgres}: \emph{Slony-I} soporta esta interacción, mientras que la replicación propia del DBMS no.
+    \item Replicación parcial: la replicación basada en \emph{logs de escritura adelantada} replica todo. 
+    \item Implementar comportamiento adicional en los esclavos.
+\end{enumerate}
 
 
 \section{Fragmentos de la base \emph{aviones}}
