@@ -3,6 +3,7 @@ services:
   alumnos:
     image: "postgres:9.6"
     container_name: "sitio-alumnos"
+    hostname: sitio-alumnos
     volumes:
       - "$HOME/.local/universidad-volume/alumnos:/volume"
     environment:
@@ -16,6 +17,7 @@ services:
   cursos:
     image: "postgres:9.6"
     container_name: "sitio-cursos"
+    hostname: sitio-cursos
     volumes:
       - "$HOME/.local/universidad-volume/cursos:/volume"
     environment:
