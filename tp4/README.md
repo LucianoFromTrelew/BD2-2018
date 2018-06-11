@@ -16,7 +16,7 @@ O bien con
 docker-compose -p <NOMBRE_PROYECTO> up -d
 ```
 
-El nombre del proyecto utilizado es **universidad**
+El nombre del proyecto utilizado es **bdd**
 
 ---
 
